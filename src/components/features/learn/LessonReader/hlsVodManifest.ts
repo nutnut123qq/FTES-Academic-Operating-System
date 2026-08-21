@@ -1,7 +1,61 @@
 export interface PreparedHlsSource {
     url: string
     expiresAtMs: number | null
+    /** Chính sách cửa sổ ký mà stream service công bố trong manifest (null = server đời cũ). */
+    windowPolicy: HlsWindowPolicy | null
     dispose: () => void
+}
+
+/**
+ * `#EXT-X-FTES-WINDOW:lead=120,ttl=120` — stream service công bố cửa sổ ký của nó.
+ *
+ * Token của mỗi nhóm segment chỉ có hiệu lực quanh lúc người xem đi tới đoạn đó: sớm nhất là
+ * `lead` giây trước, và sống thêm `ttl` giây. Trình phát cần hai con số này để TỰ xin manifest mới
+ * (neo lại tại chỗ vừa tua) trước khi CDN kịp trả 403 — nếu đợi 403 thì người tua sẽ thấy video
+ * khựng rồi mới chạy.
+ */
+export interface HlsWindowPolicy {
+    leadSeconds: number
+    ttlSeconds: number
+}
+
+export const getHlsWindowPolicy = (manifest: string): HlsWindowPolicy | null => {
+    const line = manifest
+        .split(/\r?\n/)
+        .map((candidate) => candidate.trim())
+        .find((candidate) => candidate.startsWith("#EXT-X-FTES-WINDOW:"))
+    if (!line) return null
+
+    const values = new Map(line
+        .slice("#EXT-X-FTES-WINDOW:".length)
+        .split(",")
+        .map((pair) => pair.split("=") as [string, string])
+        .filter((pair) => pair.length === 2)
+        .map(([key, value]) => [key.trim(), Number(value)] as const))
+    const leadSeconds = values.get("lead")
+    const ttlSeconds = values.get("ttl")
+    if (!Number.isFinite(leadSeconds) || !Number.isFinite(ttlSeconds)) return null
+
+    return { leadSeconds: leadSeconds as number, ttlSeconds: ttlSeconds as number }
+}
+
+/**
+ * Gắn mốc đang xem (`at`) vào URL manifest, để stream service ký cửa sổ quanh CHỖ ĐÓ thay vì quanh
+ * đầu bài. Đây là thứ làm cho việc tua tới phút 40 phát được ngay.
+ *
+ * Chỉ đụng vào URL của stream service (nhận ra bằng tham số `grant`). URL ký thẳng từ kho (S3/R2)
+ * có chữ ký phủ luôn query string — thêm một tham số vào đó là hỏng chữ ký, đổi một video đang chạy
+ * lấy một lỗi 403.
+ */
+export const withPlaybackAnchor = (url: string, seconds: number): string => {
+    try {
+        const parsed = new URL(url)
+        if (!parsed.searchParams.has("grant")) return url
+        parsed.searchParams.set("at", String(Math.max(0, Math.floor(seconds))))
+        return parsed.href
+    } catch {
+        return url
+    }
 }
 
 const NOOP = () => undefined
@@ -54,6 +108,15 @@ export const getHlsErrorStatus = (data: unknown): number | null => {
     return statuses.find((status) => typeof status === "number") ?? null
 }
 
+/**
+ * Thời điểm manifest hết dùng được — lấy hạn XA NHẤT trong các token segment, không phải gần nhất.
+ *
+ * Stream service ký theo cửa sổ bám tiến độ xem: token của đoạn đầu bài hết hạn sớm là CHUYỆN BÌNH
+ * THƯỜNG, không có nghĩa manifest đã chết. Lấy hạn gần nhất ở đây thì trình phát sẽ đi xin manifest
+ * mới ngay sau vài chục giây phát — mỗi lần xin là một lần dựng lại player, tức là tự tay làm khựa
+ * video đang chạy ngon. Đoạn đã hết hạn mà người xem tua lùi vào thì CDN trả 403, và đường xử lý
+ * 403 (xin nguồn mới, neo tại chỗ đang đứng) đã có sẵn.
+ */
 export const getHlsManifestTokenExpiryMs = (manifest: string): number | null => {
     const expiries = manifest
         .split(/\r?\n/)
@@ -61,7 +124,7 @@ export const getHlsManifestTokenExpiryMs = (manifest: string): number | null => 
         .filter((line) => line.length > 0 && !line.startsWith("#"))
         .map(getHlsUrlTokenExpiryMs)
         .filter((expiry): expiry is number => expiry !== null)
-    return expiries.length > 0 ? Math.min(...expiries) : null
+    return expiries.length > 0 ? Math.max(...expiries) : null
 }
 
 /**
@@ -123,11 +186,16 @@ export const prepareHlsVodManifestSource = async (
             mode: "cors",
             signal,
         })
-        if (!response.ok) return { url: sourceUrl, expiresAtMs: null, dispose: NOOP }
+        if (!response.ok) {
+            return { url: sourceUrl, expiresAtMs: null, windowPolicy: null, dispose: NOOP }
+        }
         const manifest = await response.text()
         const expiresAtMs = getHlsManifestTokenExpiryMs(manifest)
+        const windowPolicy = getHlsWindowPolicy(manifest)
         const normalized = normalizeHlsVodManifest(manifest)
-        if (normalized === manifest) return { url: sourceUrl, expiresAtMs, dispose: NOOP }
+        if (normalized === manifest) {
+            return { url: sourceUrl, expiresAtMs, windowPolicy, dispose: NOOP }
+        }
 
         const absoluteManifest = makeUrisAbsolute(normalized, sourceUrl)
         const blobUrl = URL.createObjectURL(new Blob(
@@ -137,9 +205,10 @@ export const prepareHlsVodManifestSource = async (
         return {
             url: blobUrl,
             expiresAtMs,
+            windowPolicy,
             dispose: () => URL.revokeObjectURL(blobUrl),
         }
     } catch {
-        return { url: sourceUrl, expiresAtMs: null, dispose: NOOP }
+        return { url: sourceUrl, expiresAtMs: null, windowPolicy: null, dispose: NOOP }
     }
 }

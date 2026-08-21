@@ -15,7 +15,9 @@ import {
     getHlsErrorStatus,
     getHlsUrlTokenExpiryMs,
     prepareHlsVodManifestSource,
+    withPlaybackAnchor,
 } from "./hlsVodManifest"
+import type { HlsWindowPolicy } from "./hlsVodManifest"
 
 /** A successful HTTP fragment that never reaches media metadata is an append/startup stall. */
 const HLS_STARTUP_STALL_TIMEOUT_MS = 8000
@@ -25,6 +27,19 @@ const HLS_TOKEN_REFRESH_LEAD_MS = 2 * 60 * 1000
 
 /** Avoid an infinite detach/attach loop on a genuinely invalid media stream. */
 const HLS_STARTUP_RECOVERY_LIMIT = 2
+
+/**
+ * Phần cửa sổ ký được phép dùng hết trước khi trình phát tự neo lại. Tua trong khoảng này thì các
+ * segment đã ký sẵn, phát ngay; vượt qua mới cần xin manifest mới. Để sát 1.0 thì người tua chạm
+ * 403 trước khi kịp neo; để quá thấp thì neo lại (và khựng) nhiều hơn mức cần.
+ */
+const ANCHOR_LEAD_USE_RATIO = 0.7
+
+/** Tua LÙI quá ngần này so với mốc neo thì token đoạn đó nhiều khả năng đã hết hạn → neo lại. */
+const ANCHOR_REWIND_USE_RATIO = 0.5
+
+/** Chống neo lại liên tục khi người dùng kéo thanh tua qua lại. */
+const ANCHOR_MIN_INTERVAL_MS = 2000
 
 /**
  * HLS player for internal (non-YouTube) lessons.
@@ -99,6 +114,16 @@ export const LessonHlsPlayer = ({
     const [failed, setFailed] = useState(false)
     const [loading, setLoading] = useState(true)
     const [attempt, setAttempt] = useState(0)
+    /**
+     * Mốc (giây) mà manifest hiện tại được ký quanh nó. Stream service ký token theo cửa sổ bám
+     * tiến độ xem, nên tua xa = phải xin manifest mới neo tại chỗ vừa tua.
+     */
+    const [anchorSeconds, setAnchorSeconds] = useState(0)
+    const anchorRef = useRef(0)
+    const lastAnchorAtRef = useRef(0)
+    /** Lúc bấm tạm dừng — để biết đã dừng bao lâu khi phát tiếp. */
+    const pausedAtRef = useRef(0)
+    const windowPolicyRef = useRef<HlsWindowPolicy | null>(null)
     const halfFiredRef = useRef(false)
     const resumePositionRef = useRef(0)
     const refreshHistoryRef = useRef<Array<number>>([])
@@ -107,6 +132,8 @@ export const LessonHlsPlayer = ({
         resumeLessonRef.current = lessonId
         resumePositionRef.current = 0
         refreshHistoryRef.current = []
+        anchorRef.current = 0
+        windowPolicyRef.current = null
     }
     const halfWatchedRef = useRef(onHalfWatched)
     halfWatchedRef.current = onHalfWatched
@@ -136,6 +163,20 @@ export const LessonHlsPlayer = ({
         refreshHistoryRef.current = []
         setAttempt((a) => a + 1)
         void onRefreshSource?.()
+    }
+
+    /**
+     * Xin manifest mới được ký quanh `seconds`. Dùng khi người xem TUA ra ngoài cửa sổ đã ký — chủ
+     * động neo lại thì chỉ mất một nhịp nạp; đợi CDN trả 403 rồi mới chữa thì người xem thấy video
+     * đứng hình trước, và mỗi lần như vậy còn tiêu một lượt trong hạn ngạch chống-tải phía server.
+     */
+    const reanchor = (seconds: number) => {
+        const now = Date.now()
+        if (now - lastAnchorAtRef.current < ANCHOR_MIN_INTERVAL_MS) return
+        lastAnchorAtRef.current = now
+        resumePositionRef.current = seconds
+        anchorRef.current = seconds
+        setAnchorSeconds(seconds)
     }
 
     const clampSeek = () => {
@@ -169,7 +210,26 @@ export const LessonHlsPlayer = ({
 
     const handlePause = () => {
         lastPauseFlushRef.current = Date.now()
+        pausedAtRef.current = Date.now()
         reporter.onPaused()
+    }
+
+    /**
+     * Phát tiếp sau khi tạm dừng LÂU: token của đoạn đang đứng nhiều khả năng đã hết hạn (TTL tính
+     * bằng phút). Neo lại ngay lúc bấm play thì người xem mất một nhịp nạp; để nguyên thì họ bấm
+     * play, video đứng im, CDN trả 403 rồi mới chữa — chậm hơn và trông như hỏng.
+     */
+    const handlePlay = () => {
+        reporter.onPlaying()
+
+        const el = videoEl.current
+        const policy = windowPolicyRef.current
+        const pausedFor = pausedAtRef.current === 0 ? 0 : Date.now() - pausedAtRef.current
+        pausedAtRef.current = 0
+        if (!el || !policy) return
+        if (pausedFor > policy.ttlSeconds * 1000 * ANCHOR_REWIND_USE_RATIO) {
+            reanchor(el.currentTime)
+        }
     }
 
     const handleEnded = () => {
@@ -184,6 +244,17 @@ export const LessonHlsPlayer = ({
     const handleSeeked = () => {
         clampSeek()
         reporter.onSeeked()
+
+        const el = videoEl.current
+        const policy = windowPolicyRef.current
+        // Server đời cũ không công bố cửa sổ → không có gì để tính; đường 403 vẫn đỡ được.
+        if (!el || !policy) return
+        const delta = el.currentTime - anchorRef.current
+        const tooFarAhead = delta > policy.leadSeconds * ANCHOR_LEAD_USE_RATIO
+        const tooFarBehind = delta < -policy.ttlSeconds * ANCHOR_REWIND_USE_RATIO
+        if (tooFarAhead || tooFarBehind) {
+            reanchor(el.currentTime)
+        }
     }
 
     // Hard-pause whenever the gate fires while the video is still mounted.
@@ -274,6 +345,11 @@ export const LessonHlsPlayer = ({
             sourceRefreshRequested = true
             refreshHistoryRef.current.push(now)
             resumePositionRef.current = el.currentTime
+            // Neo lại tại chỗ đang đứng: nguồn mới phải ký quanh ĐÂY, không phải quanh chỗ cũ —
+            // nếu không thì tua xa xong sẽ xin lại đúng một manifest cũng không mở được đoạn đó.
+            anchorRef.current = el.currentTime
+            lastAnchorAtRef.current = Date.now()
+            setAnchorSeconds(el.currentTime)
             try {
                 await onRefreshSource()
                 // If the API returned the same manifest URL, force a no-cache re-read.
@@ -317,7 +393,8 @@ export const LessonHlsPlayer = ({
 
         const play = async () => {
             try {
-                const src = manifestUrl
+                // Mốc đang xem đi kèm URL: stream service ký cửa sổ token quanh đúng chỗ này.
+                const src = withPlaybackAnchor(manifestUrl, anchorSeconds)
                 if (cancelled) return
                 // Prefer MediaSource on browsers that support hls.js. Recent desktop
                 // Chromium builds can report `maybe` for native HLS, then fetch only the
@@ -334,6 +411,7 @@ export const LessonHlsPlayer = ({
                         return
                     }
                     disposePreparedSource = preparedSource.dispose
+                    windowPolicyRef.current = preparedSource.windowPolicy
                     if (
                         preparedSource.expiresAtMs !== null
                         && preparedSource.expiresAtMs <= Date.now() + HLS_TOKEN_REFRESH_LEAD_MS
@@ -351,7 +429,12 @@ export const LessonHlsPlayer = ({
                             preparedSource.expiresAtMs - Date.now() - HLS_TOKEN_REFRESH_LEAD_MS,
                         ))
                     }
-                    hls = new Hls(HLS_STARTUP_CONFIG)
+                    // Nạp lại (neo lại / xin nguồn mới) phải quay về ĐÚNG chỗ đang xem. Thiếu
+                    // startPosition thì mỗi lần neo lại là video nhảy về 0:00 — lỗi khó chịu hơn
+                    // nhiều so với chính vấn đề đang chữa.
+                    hls = new Hls(resumePositionRef.current > 0
+                        ? { ...HLS_STARTUP_CONFIG, startPosition: resumePositionRef.current }
+                        : HLS_STARTUP_CONFIG)
                     hls.on(Hls.Events.LEVEL_LOADED, (_event, data) => {
                         const plan = getHlsStartupBufferPlan(data.details)
                         hls!.config.maxBufferLength = Math.max(
@@ -410,6 +493,13 @@ export const LessonHlsPlayer = ({
                 } else if (el.canPlayType("application/vnd.apple.mpegurl")) {
                     usingNativeHls = true
                     el.src = src
+                    // HLS native không có startPosition: tự tua về chỗ cũ khi metadata sẵn sàng.
+                    if (resumePositionRef.current > 0) {
+                        const resume = resumePositionRef.current
+                        el.addEventListener("loadedmetadata", () => {
+                            if (!cancelled) el.currentTime = resume
+                        }, { once: true })
+                    }
                 } else if (!cancelled) {
                     setFailed(true)
                     setLoading(false)
@@ -435,7 +525,7 @@ export const LessonHlsPlayer = ({
             el.removeEventListener("canplay", onMediaReady)
             hls?.destroy()
         }
-    }, [manifestUrl, attempt])
+    }, [manifestUrl, anchorSeconds, attempt])
 
     if (failed) {
         return (
@@ -477,7 +567,7 @@ export const LessonHlsPlayer = ({
                 preload="auto"
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={handleEnded}
-                onPlay={reporter.onPlaying}
+                onPlay={handlePlay}
                 onPause={handlePause}
                 onSeeking={clampSeek}
                 onSeeked={handleSeeked}

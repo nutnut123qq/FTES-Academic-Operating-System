@@ -95,14 +95,28 @@ vi.mock("./hooks/useWatchPositionReporter", () => ({
     }),
 }))
 
+const windowPolicy = vi.hoisted(() => ({ current: null as null | { leadSeconds: number; ttlSeconds: number } }))
+const preparedUrls = vi.hoisted(() => [] as Array<string>)
 vi.mock("./hlsVodManifest", () => ({
     getHlsErrorStatus: (data: { response?: { code?: number } }) => data.response?.code ?? null,
     getHlsUrlTokenExpiryMs: () => null,
-    prepareHlsVodManifestSource: (url: string) => Promise.resolve({
-        url,
-        expiresAtMs: null,
-        dispose: vi.fn(),
-    }),
+    // Bản thật chỉ gắn `at` cho URL của stream service (nhận ra bằng `grant`); giữ đúng luật đó ở
+    // đây, nếu không thì test sẽ "xanh" cả với URL ký thẳng từ kho — đúng ca làm hỏng chữ ký S3.
+    withPlaybackAnchor: (url: string, seconds: number) => {
+        const parsed = new URL(url)
+        if (!parsed.searchParams.has("grant")) return url
+        parsed.searchParams.set("at", String(Math.max(0, Math.floor(seconds))))
+        return parsed.href
+    },
+    prepareHlsVodManifestSource: (url: string) => {
+        preparedUrls.push(url)
+        return Promise.resolve({
+            url,
+            expiresAtMs: null,
+            windowPolicy: windowPolicy.current,
+            dispose: vi.fn(),
+        })
+    },
 }))
 
 import { LessonHlsPlayer } from "./LessonHlsPlayer"
@@ -120,6 +134,8 @@ const renderPlayer = (onRefreshSource?: () => Promise<unknown> | void) => render
 
 beforeEach(() => {
     h.instance = null
+    windowPolicy.current = null
+    preparedUrls.length = 0
     vi.spyOn(HTMLMediaElement.prototype, "canPlayType").mockReturnValue("")
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
         ok: true,
@@ -270,6 +286,120 @@ describe("LessonHlsPlayer source", () => {
         const requested = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls
             .map(([input]) => String(input))
         expect(requested.some((url) => url.includes("stream.ftes.vn"))).toBe(false)
+    })
+})
+
+/**
+ * TUA. Stream service ký token theo cửa sổ bám tiến độ xem, nên tua ra ngoài cửa sổ đã ký thì
+ * segment ở đó CHƯA có hiệu lực. Trình phát phải tự xin manifest neo lại tại chỗ vừa tua — đợi CDN
+ * trả 403 rồi mới chữa thì người xem thấy video đứng hình trước, và mỗi lần như vậy còn tiêu một
+ * lượt trong hạn ngạch chống-tải của server.
+ */
+describe("LessonHlsPlayer seeking", () => {
+    const renderAnchored = () => render(
+        <LessonHlsPlayer
+            manifestUrl="https://streamtest.ftes.vn/api/v1/stream/video_x/master.m3u8?grant=abc"
+            lessonId="lesson-1"
+            isGated={false}
+            onTimeUpdate={vi.fn()}
+            onEnded={vi.fn()}
+            onRefreshSource={vi.fn()}
+        />,
+    )
+
+    const seekTo = (seconds: number) => {
+        const video = document.querySelector("video") as HTMLVideoElement
+        Object.defineProperty(video, "currentTime", { value: seconds, configurable: true })
+        fireEvent.seeked(video)
+    }
+
+    it("mở bài thì neo ở mốc 0", async () => {
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+
+        expect(preparedUrls.at(-1)).toContain("at=0")
+    })
+
+    it("tua xa quá cửa sổ đã ký → xin manifest neo lại tại chỗ vừa tua", async () => {
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+
+        seekTo(1200)
+
+        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=1200"))
+        // Và nạp lại phải quay về đúng chỗ đang xem, không nhảy về 0:00.
+        expect(h.instance!.config.startPosition).toBe(1200)
+    })
+
+    it("tua ngắn TRONG cửa sổ thì không nạp lại gì cả", async () => {
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const loadsBefore = preparedUrls.length
+
+        seekTo(30)
+
+        expect(preparedUrls).toHaveLength(loadsBefore)
+    })
+
+    it("server chưa công bố cửa sổ → không tự neo lại (đường 403 lo)", async () => {
+        windowPolicy.current = null
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const loadsBefore = preparedUrls.length
+
+        seekTo(3600)
+
+        expect(preparedUrls).toHaveLength(loadsBefore)
+    })
+
+    it("tạm dừng lâu rồi phát tiếp → neo lại trước khi CDN kịp từ chối", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true })
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        render(
+            <LessonHlsPlayer
+                manifestUrl="https://streamtest.ftes.vn/api/v1/stream/video_x/master.m3u8?grant=abc"
+                lessonId="lesson-1"
+                isGated={false}
+                onTimeUpdate={vi.fn()}
+                onEnded={vi.fn()}
+                onRefreshSource={vi.fn()}
+            />,
+        )
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const video = document.querySelector("video") as HTMLVideoElement
+        Object.defineProperty(video, "currentTime", { value: 90, configurable: true })
+
+        fireEvent.pause(video)
+        vi.advanceTimersByTime(5 * 60 * 1000)
+        fireEvent.play(video)
+
+        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=90"))
+    })
+
+    it("tạm dừng ngắn thì phát tiếp ngay, không nạp lại", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true })
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        render(
+            <LessonHlsPlayer
+                manifestUrl="https://streamtest.ftes.vn/api/v1/stream/video_x/master.m3u8?grant=abc"
+                lessonId="lesson-1"
+                isGated={false}
+                onTimeUpdate={vi.fn()}
+                onEnded={vi.fn()}
+                onRefreshSource={vi.fn()}
+            />,
+        )
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const video = document.querySelector("video") as HTMLVideoElement
+        const loadsBefore = preparedUrls.length
+
+        fireEvent.pause(video)
+        vi.advanceTimersByTime(10_000)
+        fireEvent.play(video)
+
+        expect(preparedUrls).toHaveLength(loadsBefore)
     })
 })
 

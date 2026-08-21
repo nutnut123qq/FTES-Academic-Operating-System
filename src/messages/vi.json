@@ -6177,7 +6177,8 @@
                 "restart": "Học lại từ đầu",
                 "position": "Thẻ {index}/{total}",
                 "reveal": "Xem đáp án",
-                "nextCard": "Thẻ tiếp theo"
+                "nextCard": "Thẻ tiếp theo",
+                "signedOut": "Đăng nhập để học thử kho thẻ của môn; học đủ thì cần gói hội viên."
             }
         },
         "community": {

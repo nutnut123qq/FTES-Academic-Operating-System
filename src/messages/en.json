@@ -6177,7 +6177,8 @@
                 "restart": "Start over",
                 "position": "Card {index} of {total}",
                 "reveal": "Show answer",
-                "nextCard": "Next card"
+                "nextCard": "Next card",
+                "signedOut": "Sign in to preview this subject's decks; studying them in full needs a membership."
             }
         },
         "community": {

@@ -6,6 +6,7 @@ import { ArrowLeftIcon, LockSimpleIcon, StackIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { RestError } from "@/modules/api/rest/client/client"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { Link } from "@/i18n/navigation"
@@ -40,6 +41,14 @@ export const FlashcardDeckList = ({ subjectCode, onBack }: FlashcardDeckListProp
     const { view, isLoading, error, mutate } = useQuerySubjectFlashcardsSwr(subjectCode)
     const [openDeckId, setOpenDeckId] = useState<string | null>(null)
 
+    /**
+     * The deck endpoint is signed-in only (anonymous → 401) while the subject page itself is
+     * public. Letting that 401 fall into the generic load error would hand a guest a "could
+     * not load" box whose Retry button fails forever, with nothing anywhere saying "sign in"
+     * — the exact trap the Coding module already documents. A guest gets the invitation.
+     */
+    const signedOut = error instanceof RestError && error.status === 401
+
     const openDeck = useMemo(
         () => view?.decks.find((deck) => deck.id === openDeckId) ?? null,
         [view, openDeckId],
@@ -69,14 +78,16 @@ export const FlashcardDeckList = ({ subjectCode, onBack }: FlashcardDeckListProp
             <AsyncContent
                 isLoading={isLoading && !view}
                 skeleton={<DeckListSkeleton />}
-                error={view ? undefined : error}
+                error={view || signedOut ? undefined : error}
                 errorContent={{
                     title: t("practice.loadError"),
                     onRetry: () => { void mutate() },
                     retryLabel: t("practice.retry"),
                 }}
             >
-                {view && view.decks.length === 0 ? (
+                {signedOut ? (
+                    <MembershipBanner signedOut />
+                ) : view && view.decks.length === 0 ? (
                     <EmptyContent title={t("practice.flashcards.empty")} />
                 ) : (
                     <div className="flex flex-col gap-3">
@@ -130,14 +141,16 @@ const DeckRow = ({ deck, onOpen }: { deck: FlashcardDeckView; onOpen: () => void
 }
 
 /** The upsell. Shown once above the shelf, not repeated on every locked deck. */
-const MembershipBanner = () => {
+const MembershipBanner = ({ signedOut = false }: { signedOut?: boolean }) => {
     const t = useTranslations("subjects")
 
     return (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-warning bg-warning/10 p-4">
             <LockSimpleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-warning" />
             <Typography type="body-sm" className="min-w-0 flex-1">
-                {t("practice.flashcards.upsell")}
+                {signedOut
+                    ? t("practice.flashcards.signedOut")
+                    : t("practice.flashcards.upsell")}
             </Typography>
             <Link href={MEMBERSHIP_HREF} className="shrink-0 no-underline">
                 <Button size="sm" variant="primary">

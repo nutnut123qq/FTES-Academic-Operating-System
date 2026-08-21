@@ -8,7 +8,8 @@ export const profileAssetThumbnailUrl = (url: string | null | undefined): string
         return null
     }
     const match = value.match(
-        /^\/gamification\/(avatars|frames|achievements)\/([^/?#]+)\.(?:svg|png|jpe?g|webp)(?:[?#].*)?$/i,
+        // Keep in step with `groups` in scripts/generate-profile-thumbnails.mjs.
+        /^\/gamification\/(avatars|frames|achievements|badges)\/([^/?#]+)\.(?:svg|png|jpe?g|webp)(?:[?#].*)?$/i,
     )
     if (!match) {
         return value

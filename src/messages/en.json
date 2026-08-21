@@ -2410,7 +2410,7 @@
             "frameNone": "No frame",
             "frameLocked": "Locked",
             "achievementTitle": "Pinned achievement",
-            "achievementHint": "Shown right after your name, everywhere you appear.",
+            "achievementHint": "Anything you've earned can be pinned — pick one to show right after your name, everywhere you appear.",
             "achievementNone": "No achievement"
         },
         "save": "Save changes",

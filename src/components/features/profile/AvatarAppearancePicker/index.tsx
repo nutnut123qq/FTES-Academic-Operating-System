@@ -81,6 +81,10 @@ const Tile = ({
  */
 export const AvatarAppearancePicker = () => {
     const t = useTranslations("profileEdit.appearance")
+    // Namespace của tab "Thành tích" — mượn ĐÚNG chuỗi "Đã đạt {earned}/{total}" tab đó đang
+    // dùng thay vì thêm một key gần-giống. Hai màn nói về CÙNG một bộ sưu tập, nên chúng phải
+    // nói bằng cùng một câu; hai bản dịch song song là cách chúng bắt đầu lệch nhau.
+    const tCatalog = useTranslations("profile.badgeCatalog")
     const badgeLabel = useBadgeLabel()
     const runRest = useRestWithToast()
     const selfKey = useSelfProfileKey()
@@ -91,6 +95,13 @@ export const AvatarAppearancePicker = () => {
     // nên bày ra một ô bấm-là-lỗi còn tệ hơn không bày.
     const { data: badgeCatalog } = useGetBadgeCatalogSwr()
     const earnedAchievements = (badgeCatalog?.items ?? []).filter((item) => item.earned)
+    // HAI con số của CHÍNH response trên — không phải đếm lại tại chỗ — nên ô này in ra đúng
+    // chuỗi tab "Thành tích" đang in. Đây là thứ nối hai màn lại với nhau: khối chọn chỉ bày
+    // phần ĐÃ ĐẠT, nên nếu không nói tổng thì nó đọc như một bộ sưu tập khác, nhỏ hơn — đúng
+    // chỗ thầy hiểu nhầm là "huy hiệu của tôi không ghim được".
+    // Fallback về số ô đang bày cho backend chưa deploy hai trường này: thà "3/3" hơn "3/0".
+    const earnedCount = badgeCatalog?.earnedCount ?? earnedAchievements.length
+    const totalCount = badgeCatalog?.totalCount ?? earnedAchievements.length
 
     // The code currently being applied — disables the whole grid + marks the tile busy.
     const [pending, setPending] = useState<string | null>(null)
@@ -252,9 +263,15 @@ export const AvatarAppearancePicker = () => {
             {/* achievements — pin / clear the mark shown after your name */}
             {earnedAchievements.length > 0 ? (
                 <div className="flex flex-col gap-3">
-                    <Typography type="body-sm" weight="semibold">
-                        {t("achievementTitle")}
-                    </Typography>
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <Typography type="body-sm" weight="semibold">
+                            {t("achievementTitle")}
+                        </Typography>
+                        {/* "Đã đạt X/Y" — CÙNG chuỗi, CÙNG hai con số với tab "Thành tích". */}
+                        <Typography type="body-xs" color="muted">
+                            {tCatalog("summary", { earned: earnedCount, total: totalCount })}
+                        </Typography>
+                    </div>
                     <Typography type="body-xs" color="muted">
                         {t("achievementHint")}
                     </Typography>
@@ -289,7 +306,11 @@ export const AvatarAppearancePicker = () => {
                                     <span className="flex size-12 items-center justify-center">
                                         <AchievementArt achievement={item} className="size-10" />
                                     </span>
-                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                    {/* HAI dòng: tên thành tích dài ("Người đóng góp học liệu")
+                                        bị cắt còn một dòng thì hai ô cạnh nhau đọc ra giống hệt
+                                        nhau. Lưới `grid` kéo mọi ô trong CÙNG hàng cao bằng ô cao
+                                        nhất, nên dòng thứ hai chỉ nới hàng nào thật sự có tên dài. */}
+                                    <Typography type="body-xs" color="muted" className="line-clamp-2">
                                         {label}
                                     </Typography>
                                 </Tile>

@@ -7,17 +7,12 @@ export const pathConfig = () => {
         const build = () => {
             // With no locale supplied, the bare root is "" — which is an empty href the router
             // won't navigate to. Fall back to "/" so "go home" links (breadcrumbs) navigate to
-            // the locale root. NOTE: the LOCALE ROOT is GitHub-style gated — a logged-in
-            // visitor landing here is forwarded to the dashboard (góp ý #23), because this is
-            // where a bare domain lands. That gate is passed in by the route
-            // (`app/[locale]/page.tsx` → `<HomeLanding redirectSignedIn />`) and applies to
-            // this path ONLY; `home()` below renders the same landing without it.
+            // the locale root. The root renders the landing for everyone: the signed-in
+            // forward to the dashboard (góp ý #23) was removed on 2026-08-21.
             return localePath || "/"
         }
-        /** The marketing landing (`/home`) — UNGATED, and readable by signed-in visitors
-         *  too: `app/[locale]/home/page.tsx` renders the landing without the signed-in
-         *  redirect, so this is the path to use whenever "show me the home page" must
-         *  actually show it. Only the locale root above forwards to the dashboard. */
+        /** The marketing landing (`/home`) — ungated, same page and same behaviour as the
+         *  locale root, readable by everyone. */
         const home = () => {
             const homePath = `${localePath}/home`
             const build = () => homePath

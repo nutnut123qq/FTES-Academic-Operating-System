@@ -2,9 +2,10 @@
  * Regression: `keycloak.initialized` phải được set THẬT.
  *
  * Không dòng nào trong `src/` dispatch `setInitialized`, nên cờ này kẹt `false` vĩnh
- * viễn và mọi chỗ đọc nó là code chết — `HomeLanding` (`signedIn = initialized &&
- * authenticated`) chưa từng chuyển hướng ai, `AccountMenuDropdown` phải tự chế heuristic
- * riêng. Cờ chỉ có nghĩa khi được bật ở CẢ hai nhánh: có user, và khách/lỗi.
+ * viễn và mọi chỗ đọc nó là code chết — `AccountMenuDropdown` phải tự chế heuristic
+ * riêng, còn `HomeLanding` (`signedIn = initialized && authenticated`) chưa từng chuyển
+ * hướng ai. (Nhánh của `HomeLanding` đã được gỡ hẳn 2026-08-21, nên chỗ đọc cờ thật sự
+ * còn lại là `AccountMenuDropdown`.) Cờ chỉ có nghĩa khi được bật ở CẢ hai nhánh: có user, và khách/lỗi.
  *
  * Cái gì được mock và vì sao:
  * - `queryMe` / `getSelfProfile` — hai chặng mạng, không thể chạy thật trong unit test.

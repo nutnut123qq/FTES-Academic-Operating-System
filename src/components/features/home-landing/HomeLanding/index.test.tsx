@@ -3,18 +3,24 @@ import { render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
- * Regression — WHICH ROUTE gets the "signed in → dashboard" redirect.
+ * Regression — the landing forwards NOBODY.
+
+ * Góp ý #23 once asked for signed-in visitors to skip the sales page, and the patch for
+ * it lived INSIDE this component, which cannot see the url it renders at: it fired on
+ * both routes that render the landing and the signed-in half of the audience lost every
+ * way into the home page, the navbar logo included ("vô home là nhảy dashboard"). The
+ * product owner removed the redirect outright on 2026-08-21 rather than split it per
+ * route. This file is the guard: put any session-driven navigation back in here and the
+ * signed-in case goes red.
  *
- * Góp ý #23 asked for signed-in visitors to land in their workspace instead of on the
- * sales page. The first patch implemented it INSIDE this component, which cannot see the
- * url it is rendered at — so it fired on both routes that render the landing, and the
- * signed-in half of the audience lost every way into the home page, the navbar logo
- * included ("vô home là nhảy dashboard"). The gate now belongs to the route, passed in as
- * `redirectSignedIn`; the locale root passes it, `/[locale]/home` does not.
+ * The `@/redux/hooks` mock below is kept ON PURPOSE even though `./index` no longer
+ * imports it: it is what puts a SIGNED-IN session in front of the component, so a
+ * resurrected redirect fails on the assertion rather than on a missing <Provider>.
+ * Do not clean it away as a "unused mock".
  *
- * The no-prop case asserts BOTH that `replace` stayed unused AND that the landing
- * actually rendered — a `return null` with no navigation would satisfy the first
- * assertion alone while still showing the visitor a blank page.
+ * Each case asserts BOTH that no navigation fired AND that the landing actually rendered
+ * — a `return null` with no navigation would satisfy the first assertion alone while
+ * still showing the visitor a blank page.
  */
 
 const replace = vi.fn()
@@ -60,7 +66,7 @@ vi.mock("./sections/FaqSection", () => ({ FaqSection: () => <div /> }))
 
 import { HomeLanding } from "./index"
 
-describe("HomeLanding signed-in redirect", () => {
+describe("HomeLanding never redirects", () => {
     beforeEach(() => {
         replace.mockClear()
         push.mockClear()
@@ -68,33 +74,33 @@ describe("HomeLanding signed-in redirect", () => {
         session.authenticated = false
     })
 
-    it("keeps a signed-in visitor on the landing when the route does not ask for the redirect", () => {
+    it("keeps a signed-in visitor on the landing", () => {
         session.initialized = true
         session.authenticated = true
 
         render(<HomeLanding />)
 
         expect(replace).not.toHaveBeenCalled()
+        expect(push).not.toHaveBeenCalled()
         expect(screen.getByTestId("journey-hero")).toBeTruthy()
     })
 
-    it("forwards a signed-in visitor when the route asks for the redirect", () => {
-        session.initialized = true
-        session.authenticated = true
-
-        render(<HomeLanding redirectSignedIn />)
-
-        // Locale-less on purpose: the i18n router adds the active locale itself.
-        expect(replace.mock.calls).toEqual([["/dashboard"]])
-    })
-
-    it("leaves a guest on the landing even on the route that asks for the redirect", () => {
+    it("keeps a guest on the landing", () => {
         session.initialized = true
         session.authenticated = false
 
-        render(<HomeLanding redirectSignedIn />)
+        render(<HomeLanding />)
 
         expect(replace).not.toHaveBeenCalled()
+        expect(push).not.toHaveBeenCalled()
+        expect(screen.getByTestId("journey-hero")).toBeTruthy()
+    })
+
+    it("keeps a visitor whose session has not settled on the landing", () => {
+        render(<HomeLanding />)
+
+        expect(replace).not.toHaveBeenCalled()
+        expect(push).not.toHaveBeenCalled()
         expect(screen.getByTestId("journey-hero")).toBeTruthy()
     })
 })

@@ -152,3 +152,29 @@ Bốn ca, bắt chước cách mock của
 ## Capabilities
 
 Không thêm capability mới. Đây là bản thu hẹp phạm vi của một chốt điều hướng đã có.
+
+
+## Đổi hướng — 2026-08-21 (chốt của chủ sản phẩm)
+
+> **Đọc mục này TRƯỚC.** Mọi khẳng định phía trên về "locale root vẫn đưa người đã đăng
+> nhập sang dashboard", "logo đổi đích theo phiên", và hai mục CÒN TREO (chớp landing,
+> cửa sổ hydration) đều **hết hiệu lực** — xem `tasks.md` mục 7.
+
+Bản vá tách chốt theo route ở trên đã ship (`32e18e04`) nhưng **không được giữ**. Chủ sản
+phẩm đọc lại phạm vi và kết luận: góp ý #23 không đáng để đánh đổi thêm một nhánh rẽ theo
+phiên trong navbar và một prop trong component landing. Yêu cầu: *"cho về home hết đi, đừng
+có liên quan đến dashboard nữa, đổi lại như cũ"*.
+
+Đã gỡ, trong cùng thư mục change này:
+
+- `HomeLanding` bỏ hẳn prop `redirectSignedIn`, `useEffect` redirect, nhánh `return null`
+  và hai selector redux. Component không còn đọc phiên.
+- `[locale]/page.tsx` và `[locale]/home/page.tsx` render `<HomeLanding />` như nhau.
+- `Logo` trở lại một đích duy nhất `/home`, không đọc phiên.
+- Test đổi vai: từ "route nào chốt" thành **"landing không chuyển hướng ai"** và
+  **"logo luôn về /home"** — nếu ai dựng lại redirect ở tầng trang thì hai file này đỏ.
+
+**Hệ quả đã được nói rõ trước khi làm:** góp ý #23 quay về trạng thái từng bị kêu — đăng
+nhập xong vào `/` sẽ lại thấy landing. Muốn dựng lại thì dựng ở SỰ KIỆN đăng nhập (đưa
+người vừa đăng nhập đi), đừng dựng ở trang: trang không phân biệt được "vừa đăng nhập
+xong" với "cố tình mở trang chủ".

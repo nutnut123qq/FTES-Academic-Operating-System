@@ -148,6 +148,18 @@ describe("LessonHlsPlayer startup buffering", () => {
         expect(instance.config.startFragPrefetch).toBe(true)
     })
 
+    it("prefers hls.js when desktop Chromium claims it can maybe play HLS natively", async () => {
+        vi.mocked(HTMLMediaElement.prototype.canPlayType).mockReturnValue("maybe")
+
+        const { container } = renderPlayer()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+
+        const video = container.querySelector("video")!
+        expect(h.instance!.attachMedia).toHaveBeenCalledWith(video)
+        expect(h.instance!.loadSource).toHaveBeenCalledWith("https://video.example/master.m3u8")
+        expect(video.getAttribute("src")).toBeNull()
+    })
+
     it("exposes playback as soon as media metadata is ready while buffering ahead", async () => {
         const { container } = renderPlayer()
         await waitFor(() => expect(h.instance).toBeTruthy())

@@ -15,6 +15,7 @@ import type { ChallengeDetail } from "../hooks/useQueryChallengeSwr"
 import { challengeBackHref, challengeSubjectCode } from "./challengeBackHref"
 import { ChallengePaper } from "./ChallengePaper"
 import { classifyChallengePaper } from "./paperKind"
+import { EssayChallengePanel } from "./EssayChallengePanel"
 import { GradeCodePanel } from "./GradeCodePanel"
 import { UiUxChallengeEditor } from "./UiUxChallengeEditor"
 
@@ -84,14 +85,24 @@ const ChallengeBrief = ({ challenge }: { challenge: ChallengeDetail }) => {
 
 /**
  * The type-specific SOLVE surface of an ordinary (paper-less) challenge: the live UI/UX
- * editor when the BE exposes a starter + target asset, the AI code-grading panel for
- * coding/SQL, a coming-soon panel otherwise.
+ * editor when the BE exposes a starter + target asset, the essay panel for `ESSAY`, the AI
+ * code-grading panel for coding/SQL, a coming-soon panel otherwise.
+ *
+ * Nhánh `essay` phải đứng TRƯỚC nhánh coding và phải hỏi {@link ChallengeDetail.type} sau khi
+ * `mapChallengeType` đã biết `"essay"`: trước đây mọi type BE lạ đều rơi về `"coding"`, nên
+ * một đề tự luận mở ra trình soạn code kèm bộ chọn ngôn ngữ và nộp đi
+ * `{payloadType:"CODE"}`. Bug im lặng — không lỗi, chỉ sai bề mặt.
  */
 const ChallengeSolveSurface = ({ challenge }: { challenge: ChallengeDetail }) => {
     const t = useTranslations("challenge")
 
     if (challenge.type === "uiux" && challenge.targetImageUrl) {
         return <UiUxChallengeEditor challenge={challenge} />
+    }
+    if (challenge.type === "essay") {
+        // `challenge.id` là SLUG — đúng thứ useQueryChallengeSubmissionSwr nhận (nó tự
+        // getChallengeBySlug rồi mới đọc lượt nộp theo UUID).
+        return <EssayChallengePanel challengeId={challenge.id} />
     }
     if (challenge.type === "coding" || challenge.type === "sql") {
         return <GradeCodePanel challenge={challenge} challengeId={challenge.challengeUuid} />

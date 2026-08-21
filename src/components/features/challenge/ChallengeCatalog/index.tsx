@@ -8,6 +8,7 @@ import {
     PaintBrushIcon,
     SparkleIcon,
     BriefcaseIcon,
+    PenNibIcon,
     TrophyIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
@@ -21,7 +22,8 @@ import {
 } from "../hooks/useQueryChallengesSwr"
 
 /** Type filter options: "all" + every challenge type. */
-const TYPES: Array<Challenge["type"] | "all"> = ["all", "coding", "sql", "uiux", "ai", "business"]
+const TYPES: Array<Challenge["type"] | "all"> =
+    ["all", "coding", "sql", "uiux", "ai", "business", "essay"]
 
 /** BE lifecycle statuses that have an i18n label (`challengeSystem.status.*`). */
 const KNOWN_STATUSES = new Set(["PUBLISHED", "RUNNING", "CLOSED"])
@@ -33,6 +35,7 @@ const TYPE_ICONS: Record<Challenge["type"], React.ReactNode> = {
     uiux: <PaintBrushIcon className="size-6" aria-hidden focusable="false" />,
     ai: <SparkleIcon className="size-6" aria-hidden focusable="false" />,
     business: <BriefcaseIcon className="size-6" aria-hidden focusable="false" />,
+    essay: <PenNibIcon className="size-6" aria-hidden focusable="false" />,
 }
 
 /**

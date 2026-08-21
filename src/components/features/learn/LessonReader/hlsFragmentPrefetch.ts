@@ -37,7 +37,9 @@ export const prefetchHlsFragments = (
     urls.map((url) => [
         url,
         fetch(url, {
-            cache: "no-store",
+            // Reuse a browser/CDN response when one is already available. `no-store`
+            // made the unusually large first segment restart from zero after recovery.
+            cache: "default",
             credentials: "omit",
             mode: "cors",
             signal,

@@ -94,15 +94,25 @@ vi.mock("./hooks/useWatchPositionReporter", () => ({
     }),
 }))
 
+vi.mock("./hlsVodManifest", () => ({
+    getHlsUrlTokenExpiryMs: () => null,
+    prepareHlsVodManifestSource: (url: string) => Promise.resolve({
+        url,
+        expiresAtMs: null,
+        dispose: vi.fn(),
+    }),
+}))
+
 import { LessonHlsPlayer } from "./LessonHlsPlayer"
 
-const renderPlayer = () => render(
+const renderPlayer = (onRefreshSource?: () => Promise<unknown> | void) => render(
     <LessonHlsPlayer
         manifestUrl="https://video.example/master.m3u8"
         lessonId="lesson-1"
         isGated={false}
         onTimeUpdate={vi.fn()}
         onEnded={vi.fn()}
+        onRefreshSource={onRefreshSource}
     />,
 )
 
@@ -151,7 +161,7 @@ describe("LessonHlsPlayer startup buffering", () => {
             arrayBuffer: () => Promise.resolve(new Uint8Array([index]).buffer),
         }))
         await waitFor(() => expect(instance.attachMedia).toHaveBeenCalledTimes(1))
-        expect(instance.startLoad).toHaveBeenCalledWith(-1)
+        expect(instance.startLoad).toHaveBeenCalledWith(0)
     })
 
     it("keeps loading until metadata and five distinct media fragments are buffered", async () => {
@@ -172,7 +182,7 @@ describe("LessonHlsPlayer startup buffering", () => {
                 },
             })
         })
-        await waitFor(() => expect(instance.startLoad).toHaveBeenCalledWith(-1))
+        await waitFor(() => expect(instance.startLoad).toHaveBeenCalledWith(0))
         expect(fetch).toHaveBeenCalledTimes(5)
         expect(instance.config.startFragPrefetch).toBe(false)
         expect(instance.config.maxBufferLength).toBe(31)
@@ -218,6 +228,23 @@ describe("LessonHlsPlayer startup buffering", () => {
         })
 
         expect(instance.recoverMediaError).toHaveBeenCalledTimes(1)
-        expect(instance.startLoad).toHaveBeenCalledWith(-1)
+        expect(instance.startLoad).toHaveBeenCalledWith(0)
+    })
+
+    it("requests a freshly signed stream when the CDN rejects a segment grant", async () => {
+        const refreshSource = vi.fn().mockResolvedValue(undefined)
+        renderPlayer(refreshSource)
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const instance = h.instance!
+
+        act(() => {
+            instance.emit("error", {
+                type: "networkError",
+                fatal: false,
+                response: { code: 403 },
+            })
+        })
+
+        await waitFor(() => expect(refreshSource).toHaveBeenCalledTimes(1))
     })
 })

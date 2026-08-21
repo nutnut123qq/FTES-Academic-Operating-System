@@ -10,14 +10,9 @@ import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
 import {
     getHlsStartupBufferPlan,
     HLS_STARTUP_CONFIG,
-    HLS_STARTUP_SEGMENT_COUNT,
 } from "./hlsStartupBuffer"
 import {
-    createPrefetchedFragmentLoader,
-    prefetchHlsFragments,
-    type HlsFragmentPrefetchCache,
-} from "./hlsFragmentPrefetch"
-import {
+    getHlsErrorStatus,
     getHlsUrlTokenExpiryMs,
     prepareHlsVodManifestSource,
 } from "./hlsVodManifest"
@@ -34,9 +29,6 @@ interface PlaylistResponse {
 
 /** A successful HTTP fragment that never reaches media metadata is an append/startup stall. */
 const HLS_STARTUP_STALL_TIMEOUT_MS = 8000
-
-/** Never hold playback forever when a CDN prefetch is slow or unavailable. */
-const HLS_STARTUP_PREFETCH_TIMEOUT_MS = 60000
 
 /** Refresh grants before a slow first segment can cross their expiry boundary. */
 const HLS_TOKEN_REFRESH_LEAD_MS = 2 * 60 * 1000
@@ -217,17 +209,12 @@ export const LessonHlsPlayer = ({
         let usingNativeHls = false
         let mediaReady = el.readyState >= 1
         let startupComplete = false
-        let requiredStartupSegments = HLS_STARTUP_SEGMENT_COUNT
         let startupRecoveryCount = 0
         let startupWatchdog: ReturnType<typeof setTimeout> | null = null
-        let startupPrefetchTimer: ReturnType<typeof setTimeout> | null = null
-        let startupPrefetchStarted = false
         let disposePreparedSource: (() => void) | null = null
         let tokenRefreshTimer: ReturnType<typeof setTimeout> | null = null
         let sourceRefreshRequested = false
-        const startupPrefetchController = new AbortController()
-        const startupPrefetchCache: HlsFragmentPrefetchCache = new Map()
-        const bufferedStartupSegments = new Set<string>()
+        const sourceController = new AbortController()
         setFailed(false)
         setLoading(true)
         halfFiredRef.current = false
@@ -236,13 +223,6 @@ export const LessonHlsPlayer = ({
             if (startupWatchdog) {
                 clearTimeout(startupWatchdog)
                 startupWatchdog = null
-            }
-        }
-
-        const clearStartupPrefetchTimer = () => {
-            if (startupPrefetchTimer) {
-                clearTimeout(startupPrefetchTimer)
-                startupPrefetchTimer = null
             }
         }
 
@@ -265,11 +245,9 @@ export const LessonHlsPlayer = ({
                 if (mediaReady) finishStartup()
                 return
             }
-            // HTTP 200 alone is not readiness: wait until five distinct media fragments
-            // have been transmuxed/appended AND the <video> has metadata.
-            if (mediaReady && bufferedStartupSegments.size >= requiredStartupSegments) {
-                finishStartup()
-            }
+            // Do not hide a playable first segment behind a five-fragment startup gate.
+            // hls.js continues filling the 60-second forward buffer in the background.
+            if (mediaReady) finishStartup()
         }
 
         const failStartup = () => {
@@ -316,7 +294,6 @@ export const LessonHlsPlayer = ({
             startupRecoveryCount += 1
             if (!startupComplete) {
                 mediaReady = false
-                bufferedStartupSegments.clear()
             }
             hls.recoverMediaError()
             hls.startLoad(startupComplete ? -1 : resumePositionRef.current)
@@ -362,7 +339,7 @@ export const LessonHlsPlayer = ({
                 } else if (Hls.isSupported()) {
                     const preparedSource = await prepareHlsVodManifestSource(
                         src,
-                        startupPrefetchController.signal,
+                        sourceController.signal,
                     )
                     if (cancelled) {
                         preparedSource.dispose()
@@ -386,14 +363,9 @@ export const LessonHlsPlayer = ({
                             preparedSource.expiresAtMs - Date.now() - HLS_TOKEN_REFRESH_LEAD_MS,
                         ))
                     }
-                    const fragmentLoader = createPrefetchedFragmentLoader(
-                        Hls.DefaultConfig.loader,
-                        startupPrefetchCache,
-                    )
-                    hls = new Hls({ ...HLS_STARTUP_CONFIG, fLoader: fragmentLoader })
+                    hls = new Hls(HLS_STARTUP_CONFIG)
                     hls.on(Hls.Events.LEVEL_LOADED, (_event, data) => {
                         const plan = getHlsStartupBufferPlan(data.details)
-                        requiredStartupSegments = plan.segmentCount
                         hls!.config.maxBufferLength = Math.max(
                             hls!.config.maxBufferLength,
                             plan.bufferSeconds,
@@ -402,39 +374,6 @@ export const LessonHlsPlayer = ({
                             hls!.config.maxMaxBufferLength,
                             plan.bufferSeconds * 2,
                         )
-
-                        if (startupPrefetchStarted) return
-                        startupPrefetchStarted = true
-                        const resumePosition = Math.max(0, resumePositionRef.current)
-                        const resumeIndex = Math.max(0, data.details.fragments.findIndex(
-                            (fragment) => fragment.start + fragment.duration > resumePosition,
-                        ))
-                        const fragments = data.details.fragments
-                            .slice(resumeIndex, resumeIndex + requiredStartupSegments)
-                            // A full-response cache must never satisfy a byte-range request.
-                            .filter((fragment) => fragment.byteRange.length === 0)
-                        const prefetched = prefetchHlsFragments(
-                            fragments.map((fragment) => fragment.url),
-                            startupPrefetchController.signal,
-                        )
-                        prefetched.forEach((promise, url) => startupPrefetchCache.set(url, promise))
-                        startupPrefetchTimer = setTimeout(
-                            () => startupPrefetchController.abort(),
-                            HLS_STARTUP_PREFETCH_TIMEOUT_MS,
-                        )
-                        void Promise.allSettled(prefetched.values()).then(() => {
-                            clearStartupPrefetchTimer()
-                            if (!cancelled && hls) {
-                                // Attaching MediaSource can make hls.js request fragment zero
-                                // immediately. Wait until the whole startup cache is ready so
-                                // that request cannot escape through the normal network loader.
-                                hls.attachMedia(el)
-                                // Generated VOD playlists have occasionally omitted ENDLIST.
-                                // Always begin startup at the first media sequence instead of
-                                // allowing hls.js to infer a live-edge position.
-                                hls.startLoad(resumePosition)
-                            }
-                        })
                     })
                     hls.on(Hls.Events.FRAG_LOADED, (_event, data) => {
                         if (data.frag.type === "main" && typeof data.frag.sn === "number") {
@@ -443,13 +382,12 @@ export const LessonHlsPlayer = ({
                     })
                     hls.on(Hls.Events.FRAG_BUFFERED, (_event, data) => {
                         if (data.frag.type !== "main" || typeof data.frag.sn !== "number") return
-                        bufferedStartupSegments.add(`${data.frag.level}:${data.frag.sn}`)
                         maybeFinishStartup()
                     })
                     hls.on(Hls.Events.ERROR, (_e, d) => {
                         if (cancelled) return
 
-                        const responseCode = d.response?.code
+                        const responseCode = getHlsErrorStatus(d)
                         const tokenExpiry = d.frag ? getHlsUrlTokenExpiryMs(d.frag.url) : null
                         const authorizationExpired = responseCode === 401
                             || responseCode === 403
@@ -477,6 +415,9 @@ export const LessonHlsPlayer = ({
                             failStartup()
                         }
                     })
+                    // Use the same proven ordering as ftes.vn. MediaSource is ready before
+                    // the manifest can trigger fragment loading, avoiding the grey 0:00 state.
+                    hls.attachMedia(el)
                     hls.loadSource(preparedSource.url)
                 } else if (!cancelled) {
                     setFailed(true)
@@ -496,10 +437,8 @@ export const LessonHlsPlayer = ({
         return () => {
             cancelled = true
             clearStartupWatchdog()
-            clearStartupPrefetchTimer()
             clearTokenRefreshTimer()
-            startupPrefetchController.abort()
-            startupPrefetchCache.clear()
+            sourceController.abort()
             disposePreparedSource?.()
             el.removeEventListener("loadedmetadata", onMediaReady)
             el.removeEventListener("canplay", onMediaReady)

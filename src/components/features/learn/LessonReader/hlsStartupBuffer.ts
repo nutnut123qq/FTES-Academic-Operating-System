@@ -9,19 +9,25 @@ export const HLS_STARTUP_SEGMENT_COUNT = 5
  * least five normal lesson segments.
  */
 export const HLS_STARTUP_CONFIG: Partial<HlsConfig> = {
-    // The media playlist still loads immediately. Fragment loading starts only after the
-    // first five URLs have been fetched together into the in-memory startup cache.
-    autoStartLoad: false,
-    // The custom fragment loader performs the startup prefetch. Letting hls.js also
-    // prefetch fragment zero races the cache and can leave desktop playback at 0:00.
-    startFragPrefetch: false,
-    maxBufferLength: 30,
-    maxMaxBufferLength: 180,
+    // Match the proven player on ftes.vn: attach MediaSource immediately, allow playback
+    // as soon as fragment zero is playable, and keep fetching well beyond five segments.
+    autoStartLoad: true,
+    startFragPrefetch: true,
+    maxBufferLength: 60,
+    maxMaxBufferLength: 300,
     maxBufferSize: 120 * 1000 * 1000,
     backBufferLength: 30,
     maxBufferHole: 0.5,
     appendErrorMaxRetry: 6,
     nudgeMaxRetry: 5,
+    fragLoadPolicy: {
+        default: {
+            maxTimeToFirstByteMs: 30000,
+            maxLoadTimeMs: 240000,
+            timeoutRetry: { maxNumRetry: 4, retryDelayMs: 1000, maxRetryDelayMs: 8000 },
+            errorRetry: { maxNumRetry: 6, retryDelayMs: 1000, maxRetryDelayMs: 8000 },
+        },
+    },
     // Desktop lessons should use the mature MediaSource path. Mobile Safari takes the
     // native-HLS branch before hls.js is constructed, so this does not change mobile.
     preferManagedMediaSource: false,

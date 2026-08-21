@@ -16,13 +16,13 @@ import { getAssistantBubbles, getAssistantOptions, type AssistantBubble } from "
  * the browsers that never shipped animated WebP — served through a plain
  * `<picture>`, NOT `next/image` (the image optimizer would flatten an animated
  * source to a single frame, and `<picture>` is the only way to express the
- * fallback). Intrinsic size is the WebP's 260×365; the rendered width comes from
+ * fallback). Intrinsic size is the WebP's 300×402; the rendered width comes from
  * the wrapper class and the height follows via `h-auto` (no distortion).
  */
 const MASCOT_WEBP = "/fes-mascot-wave.webp"
 const MASCOT_GIF = "/fes-mascot-wave.gif"
-const MASCOT_WIDTH = 260
-const MASCOT_HEIGHT = 365
+const MASCOT_WIDTH = 300
+const MASCOT_HEIGHT = 402
 
 /**
  * `/community/...` carries `CommunityLiveChatFab`, which only exists BELOW `xl`

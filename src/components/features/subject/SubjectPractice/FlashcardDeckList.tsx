@@ -10,6 +10,7 @@ import { RestError } from "@/modules/api/rest/client/client"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { Link } from "@/i18n/navigation"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useQuerySubjectFlashcardsSwr } from "../hooks/useQuerySubjectFlashcardsSwr"
 import type {
     FlashcardCardView,
@@ -225,17 +226,16 @@ const StudySession = ({ deck, onBack }: { deck: FlashcardDeckView; onBack: () =>
                             "flex min-h-[12rem] flex-col justify-center gap-4 rounded-2xl border border-default p-6",
                         )}
                     >
-                        <Typography type="body" className="whitespace-pre-wrap">
-                            {card.front}
-                        </Typography>
+                        {/* Markdown, KHÔNG phải chữ thuần: có môn (Toán, Trung) ra đề bằng ẢNH —
+                            cả câu hỏi lẫn phương án nằm trong một tấm hình — nên mặt thẻ lưu
+                            `![](url)`. Render chữ thuần thì người học chỉ thấy một dòng link.
+                            `math` bật vì phần lớn thẻ ảnh là môn Toán, thẻ chữ có công thức cũng
+                            hiện đúng thay vì trơ ra `$...$`. */}
+                        <MarkdownContent markdown={card.front} math />
                         {revealed ? (
-                            <Typography
-                                type="body-sm"
-                                color="muted"
-                                className="whitespace-pre-wrap border-t border-separator pt-4"
-                            >
-                                {card.back}
-                            </Typography>
+                            <div className="border-t border-separator pt-4">
+                                <MarkdownContent markdown={card.back} math />
+                            </div>
                         ) : null}
                     </div>
                     <div className="flex flex-wrap gap-2">

@@ -17,6 +17,15 @@ import type {
     FlashcardDeckView,
 } from "@/modules/api/rest/subject/types"
 
+/**
+ * Ghim ảnh trong mặt thẻ vào bề ngang khung.
+ *
+ * Ảnh đề quét rộng 1440px và renderer Markdown dùng chung KHÔNG đặt ràng buộc nào cho `img`
+ * (nó phục vụ cả trang đọc rộng), nên để nguyên là thẻ tràn ngang trên màn hẹp. Ghim tại đây
+ * thay vì sửa renderer chung: bề mặt khác có thể đang cố ý cần ảnh tràn viền.
+ */
+const CARD_MARKDOWN = "[&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg"
+
 /** Where a reader goes to buy the membership that unlocks the paid decks. */
 const MEMBERSHIP_HREF = "/dashboard?tab=plan"
 
@@ -231,10 +240,10 @@ const StudySession = ({ deck, onBack }: { deck: FlashcardDeckView; onBack: () =>
                             `![](url)`. Render chữ thuần thì người học chỉ thấy một dòng link.
                             `math` bật vì phần lớn thẻ ảnh là môn Toán, thẻ chữ có công thức cũng
                             hiện đúng thay vì trơ ra `$...$`. */}
-                        <MarkdownContent markdown={card.front} math />
+                        <MarkdownContent markdown={card.front} math className={CARD_MARKDOWN} />
                         {revealed ? (
                             <div className="border-t border-separator pt-4">
-                                <MarkdownContent markdown={card.back} math />
+                                <MarkdownContent markdown={card.back} math className={CARD_MARKDOWN} />
                             </div>
                         ) : null}
                     </div>

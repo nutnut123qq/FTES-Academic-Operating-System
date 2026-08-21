@@ -20,6 +20,11 @@ import type { SelfProfile } from "@/modules/api/rest/profile"
  *    could never be taken off,
  *  - only EARNED achievements are offered (the backend rejects an unearned code
  *    with a 400, so an always-failing tile is worse than no tile),
+ *  - but EVERY kind of them — BADGE, TITLE and TROPHY are one pool, and `kind`
+ *    never gates what may be pinned,
+ *  - the header carries the WHOLE-catalog tally ("Đã đạt X/Y", the Thành tích
+ *    tab's own key and numbers) so the earned-only list cannot be misread as a
+ *    smaller, separate collection,
  *  - the whole block disappears when nothing has been earned / the backend has
  *    not shipped, exactly how the frame block degrades on an empty catalog.
  */
@@ -30,10 +35,18 @@ const mutate = vi.fn()
 
 let profile: SelfProfile | undefined
 let catalogItems: Array<BadgeCatalogItem> = []
+let catalogCounts: { earnedCount: number; totalCount: number } | null = null
 
+// Keys render as themselves; a key WITH ICU values renders "key a=1 b=2" so a case can
+// assert the interpolated numbers (the "Đã đạt X/Y" line) and not just the key name.
 vi.mock("next-intl", () => ({
     useTranslations: () => {
-        const t = (key: string) => key
+        const t = (key: string, values?: Record<string, unknown>) =>
+            values
+                ? `${key} ${Object.entries(values)
+                    .map(([name, value]) => `${name}=${String(value)}`)
+                    .join(" ")}`
+                : key
         t.has = () => false
         return t
     },
@@ -72,9 +85,16 @@ vi.mock("@/components/features/profile/hooks/useAppearanceCatalogSwr", () => ({
     useAppearanceCatalogSwr: () => ({ avatars: [], frames: [], isLoading: false }),
 }))
 
+// `earnedCount`/`totalCount` are the BACKEND's own tallies and cover the WHOLE catalog —
+// `totalCount` counts locked rows the picker never lists. A case sets `catalogCounts` to
+// pull them apart from `items.length`; otherwise they derive realistically from `items`.
 vi.mock("@/hooks/swr/api/rest/queries/useGetBadgeCatalogSwr", () => ({
     useGetBadgeCatalogSwr: () => ({
-        data: { earnedCount: 0, totalCount: catalogItems.length, items: catalogItems },
+        data: {
+            earnedCount: catalogCounts?.earnedCount ?? catalogItems.filter((i) => i.earned).length,
+            totalCount: catalogCounts?.totalCount ?? catalogItems.length,
+            items: catalogItems,
+        },
     }),
 }))
 
@@ -124,6 +144,7 @@ beforeEach(() => {
     mutate.mockReset()
     profile = selfProfile()
     catalogItems = [item(), item({ code: "STREAK_7", name: "Tuần Lửa", iconUrl: null })]
+    catalogCounts = null
 })
 
 describe("AvatarAppearancePicker — pinning an achievement", () => {
@@ -180,6 +201,44 @@ describe("AvatarAppearancePicker — pinning an achievement", () => {
 
         expect(screen.getByRole("button", { name: "Bài học đầu tiên" })).toBeTruthy()
         expect(screen.queryByRole("button", { name: "Trăm Ngày Lửa" })).toBeNull()
+    })
+
+    it("prints the WHOLE-catalog tally, reusing the Thành tích tab's own key", () => {
+        // The block lists only what is EARNED, so without a total it reads as a small,
+        // separate collection — which is exactly how the owner read it ("my huy hiệu
+        // aren't pinnable"). The counts come from the RESPONSE, not from `items.length`,
+        // so the picker and the Thành tích tab can never print two different totals for
+        // one collection. `total` here (43) deliberately exceeds the two listed tiles.
+        catalogCounts = { earnedCount: 2, totalCount: 43 }
+        render(<AvatarAppearancePicker />)
+
+        expect(screen.getByText("summary earned=2 total=43")).toBeTruthy()
+    })
+
+    it("offers EVERY kind — BADGE, TITLE and TROPHY are one pool, not three", () => {
+        // `kind` is a LABEL on a badge, never a gate: one pin slot, and anything
+        // earned may fill it. The owner read the block as "achievements only, my
+        // huy hiệu are missing", so the rule is pinned down here — a `kind`
+        // predicate sneaked in anywhere on the read path drops a tile and fails.
+        //
+        // The TITLE row carries no art on purpose: `badgeKindIcon` has no TITLE
+        // entry and falls back to the medal, so this also proves an un-arted,
+        // un-mapped kind still DRAWS a tile instead of collapsing to a blank row
+        // that reads as "not offered".
+        catalogItems = [
+            item({ code: "FIRST_LESSON", name: "Bài học đầu tiên", kind: "BADGE" }),
+            item({ code: "HELPFUL_10", name: "Người trợ giúp", kind: "TITLE", iconUrl: null }),
+            item({ code: "FIRST_COURSE", name: "Khoá học đầu tiên", kind: "TROPHY" }),
+        ]
+        render(<AvatarAppearancePicker />)
+
+        expect(screen.getByRole("button", { name: "Bài học đầu tiên" })).toBeTruthy()
+        expect(screen.getByRole("button", { name: "Người trợ giúp" })).toBeTruthy()
+        expect(screen.getByRole("button", { name: "Khoá học đầu tiên" })).toBeTruthy()
+        // the art-less TITLE tile still renders a glyph rather than nothing
+        expect(
+            screen.getByRole("button", { name: "Người trợ giúp" }).querySelector("svg"),
+        ).toBeTruthy()
     })
 
     it("hides the whole block when nothing has been earned (or the backend has not shipped)", () => {

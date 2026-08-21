@@ -4,7 +4,12 @@ import sharp from "sharp"
 
 const publicRoot = path.resolve("public", "gamification")
 const outputDir = path.join(publicRoot, "profile-thumbnails")
-const groups = ["avatars", "frames", "achievements"]
+// `badges` = the five TIER medallions (bronze…diamond). They belong here for the same
+// reason the other three do: they are pinned next to a name at 16px, and the originals
+// are ~260 KB each. Must stay in step with the alternation in src/utils/profileAsset.ts —
+// a group listed in one place but not the other either ships the full-size original or
+// points at a thumbnail that was never generated.
+const groups = ["avatars", "frames", "achievements", "badges"]
 const supported = new Set([".svg", ".png", ".jpg", ".jpeg", ".webp"])
 
 await mkdir(outputDir, { recursive: true })

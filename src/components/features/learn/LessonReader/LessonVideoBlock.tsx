@@ -69,10 +69,16 @@ const PreviewLockOverlay = ({
  *
  * Resolves the stream manifest to determine `mode`/`previewSeconds`/`cheapestPackage`
  * (and, on the `freemium-youtube-preview-gate` BE, a PREVIEW `videoRef`), then mounts
- * the correct player. Dispatch order: a signed HLS manifest (`provider === "HLS"`,
- * `stream.url` set, `videoRef` null) plays DIRECTLY via {@link LessonHlsPlayer}'s
- * `manifestUrl` mode; otherwise the ref-based fallback runs — YouTube embed for a
- * YouTube ref, HLS token mode for an internal `video_*` ref.
+ * the correct player: a signed HLS manifest (`provider === "HLS"` + `stream.url`) plays via
+ * {@link LessonHlsPlayer}; a YouTube ref plays in the embed.
+ *
+ * Self-hosted video comes from the BE and ONLY from the BE. The old `video_*` branch — which
+ * resolved the token against `stream.ftes.vn/api/videos/{ref}/playlist` in the browser — is
+ * gone: it returned an unexpiring, Referer-only URL, defeating the per-segment signing the
+ * BE path is built on. It also fired on lessons the BE was already serving, because the
+ * catalog `videoRef` arrives BEFORE the `/stream` call answers. So a self-hosted lesson holds
+ * a skeleton until the stream call answers, and when the BE has no playable URL the player
+ * shows its retry card (which re-asks the BE) instead of a silent blank.
  *
  * The preview gate is a PERSISTENT state owned here (single source of truth): the
  * shared `usePreviewGate` hook fires once at `previewSeconds` → opens the package modal
@@ -203,8 +209,24 @@ export const LessonVideoBlock = ({
     ) : null
 
     const ytId = effectiveRef ? youtubeId(effectiveRef) : null
-    const player = manifestUrl ? (
+    /** Self-hosted token — legacy `video_*` or the new-upload `aosvideo:<uuid>`. */
+    const selfHostedRef = !!effectiveRef && /^\s*(?:video_|aosvideo:)/.test(effectiveRef)
+
+    // Self-hosted video: ONLY the BE can hand out a playable (signed, preview-cut) manifest, so
+    // hold the skeleton while the stream call is in flight rather than mounting a player on the
+    // raw catalog ref — that mount is what used to fire the stream-gateway request.
+    if (!manifestUrl && !ytId && selfHostedRef && isLoading) {
+        return (
+            <div className="mx-auto w-full max-w-5xl">
+                <Skeleton className="aspect-video w-full rounded-2xl" />
+            </div>
+        )
+    }
+
+    const player = manifestUrl || selfHostedRef ? (
         <LessonHlsPlayer
+            // Null when the BE handed back no playable URL — the player shows its retry card,
+            // and that retry re-asks the BE (`onRefreshSource`).
             manifestUrl={manifestUrl}
             lessonId={lessonId}
             previewSeconds={previewSeconds}
@@ -232,19 +254,10 @@ export const LessonVideoBlock = ({
             trackToEnd={!!upNext && !upNextDisabled}
             overlay={upNextOverlay}
         />
-    ) : effectiveRef && /^\s*video_/.test(effectiveRef) ? (
-        <LessonHlsPlayer
-            videoRef={effectiveRef.trim()}
-            lessonId={lessonId}
-            previewSeconds={previewSeconds}
-            isGated={previewGate.isGated}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleEnded}
-            onHalfWatched={onHalfWatched}
-            overlay={upNextOverlay}
-        />
     ) : null
 
+    // Ref that is neither YouTube nor a self-hosted token (a bare document/drive link on a
+    // VIDEO lesson): nothing to play, as before.
     if (!player) return null
 
     const cheapestName = stream?.cheapestPackage?.name

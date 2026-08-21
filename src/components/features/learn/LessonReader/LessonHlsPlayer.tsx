@@ -17,16 +17,6 @@ import {
     prepareHlsVodManifestSource,
 } from "./hlsVodManifest"
 
-/** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
-const STREAM_BASE = "https://stream.ftes.vn"
-
-/** Playlist presign response from `GET {STREAM_BASE}/api/videos/{ref}/playlist?presign=true`. */
-interface PlaylistResponse {
-    cdnPlaylistUrl?: string
-    presignedUrl?: string
-    proxyPlaylistUrl?: string
-}
-
 /** A successful HTTP fragment that never reaches media metadata is an append/startup stall. */
 const HLS_STARTUP_STALL_TIMEOUT_MS = 8000
 
@@ -37,25 +27,31 @@ const HLS_TOKEN_REFRESH_LEAD_MS = 2 * 60 * 1000
 const HLS_STARTUP_RECOVERY_LIMIT = 2
 
 /**
- * HLS player for internal (non-YouTube) lessons. Two source modes, mutually exclusive:
+ * HLS player for internal (non-YouTube) lessons.
  *
- * - `manifestUrl` (direct mode): a signed HLS manifest URL the BE already resolved
- *   (`StreamViewResponse.url` when `provider === "HLS"` and `hls_manifest_key` is set).
- *   The URL is loaded STRAIGHT into hls.js / native HLS — no stream-gateway resolve.
- * - `videoRef` (legacy token mode): an internal `video_*` token (a minority of Funnycode
- *   courses stream from stream.ftes.vn). Resolved to a signed `master.m3u8` via the
- *   unauthenticated stream-gateway playlist endpoint, then played.
+ * The ONE source is `manifestUrl`: the manifest the BE signed for this viewer
+ * (`StreamViewResponse.url` from `GET /courses/lessons/{id}/stream`), loaded straight into
+ * hls.js / native HLS.
  *
- * Exactly one of `manifestUrl` / `videoRef` must be provided. Either way the paywall is
- * enforced upstream: the BE only ships a playable URL/ref when the lesson is accessible
- * (free or FULL) — a locked lesson never reaches this component.
+ * <b>Removed on purpose — the legacy `videoRef` token mode.</b> It resolved an internal
+ * `video_*` token against the OLD gateway (`stream.ftes.vn/api/videos/{ref}/playlist`) from
+ * the browser, which handed back a Bunny/Wasabi URL with NO expiry, gated only by
+ * `Referer`. That is precisely what the per-segment signing on the BE path exists to
+ * prevent: one copied URL streams the whole lesson to anyone, forever. It also fired on
+ * lessons the BE was already serving properly, because the catalog `videoRef` reaches the
+ * FE before the `/stream` call answers.
+ *
+ * `manifestUrl` null/undefined = the BE has no playable URL for this lesson (a legacy video
+ * whose ticket could not be issued, a transcode not READY yet). The player then shows its
+ * error card, whose retry re-asks the BE via `onRefreshSource` — it never reaches for the
+ * gateway. The paywall is enforced upstream either way: the BE only signs a manifest the
+ * viewer is allowed to watch, and cuts the preview window server-side.
  *
  * In PREVIEW mode the player hard-pauses at `previewSeconds`, clamps seeking before
  * the limit, and reports playback to the shared preview gate owned by the parent
  * `LessonVideoBlock` (single source of truth for both the HLS and YouTube players).
  */
 export const LessonHlsPlayer = ({
-    videoRef,
     manifestUrl,
     lessonId,
     previewSeconds,
@@ -66,10 +62,12 @@ export const LessonHlsPlayer = ({
     onRefreshSource,
     overlay,
 }: {
-    /** Legacy `video_*` token resolved via the stream gateway. Mutually exclusive with `manifestUrl`. */
-    videoRef?: string
-    /** Pre-signed HLS manifest URL loaded directly (skips the gateway resolve). Mutually exclusive with `videoRef`. */
-    manifestUrl?: string
+    /**
+     * Signed HLS manifest URL from the BE (`StreamViewResponse.url`) — the only source this
+     * player accepts. Null/undefined when the BE could not hand out a playable URL, which
+     * renders the error card + retry instead.
+     */
+    manifestUrl?: string | null
     lessonId: string
     previewSeconds?: number
     /** Preview limit reached — hard-pause the media. From the shared preview gate. */
@@ -85,11 +83,9 @@ export const LessonHlsPlayer = ({
     onEnded: () => void
     onHalfWatched?: () => void
     /**
-     * Direct (`manifestUrl`) mode only: re-fetch a freshly signed `stream.url`. A signed
-     * master manifest expires (≈6h), so retrying by replaying the same stale prop just
-     * fails again. Retry calls this (wired to the stream SWR `mutate`) so a new signed URL
-     * arrives as a new `manifestUrl` prop, which re-runs the load effect. Legacy token mode
-     * ignores it (it already re-resolves the playlist from the gateway on retry).
+     * Re-fetch a freshly signed `stream.url`. Signed playback expires (grant TTL ~15'), so
+     * retrying by replaying the same stale prop just fails again. Retry calls this (wired to
+     * the stream SWR `mutate`) so a new signed URL arrives as a new `manifestUrl` prop.
      */
     onRefreshSource?: () => Promise<unknown> | void
     /**
@@ -131,19 +127,15 @@ export const LessonHlsPlayer = ({
 
     /**
      * Retry after a load failure. Clears `failed` so the <video> (unmounted by the error
-     * card) remounts and the load effect can re-attach. In direct manifest mode the stale
-     * signed URL may have expired, so fetch a freshly signed one via `onRefreshSource`
-     * (the new `manifestUrl` prop re-runs the effect); in legacy token mode bump `attempt`
-     * to re-resolve the gateway playlist.
+     * card) remounts, and bumps `attempt` so the load effect re-runs even when the BE hands
+     * back the SAME url. The stale signed URL may simply have expired, so also ask the parent
+     * for a freshly signed one — it arrives as a new `manifestUrl` prop.
      */
     const handleRetry = () => {
         setFailed(false)
         refreshHistoryRef.current = []
-        if (manifestUrl && onRefreshSource) {
-            onRefreshSource()
-        } else {
-            setAttempt((a) => a + 1)
-        }
+        setAttempt((a) => a + 1)
+        void onRefreshSource?.()
     }
 
     const clampSeek = () => {
@@ -202,6 +194,13 @@ export const LessonHlsPlayer = ({
     }, [isGated])
 
     useEffect(() => {
+        // No URL from the BE = nothing playable. Show the error card (whose retry re-asks the
+        // BE) instead of reaching for the old stream gateway from the browser.
+        if (!manifestUrl) {
+            setFailed(true)
+            setLoading(false)
+            return
+        }
         const el = videoEl.current
         if (!el) return
         let hls: Hls | null = null
@@ -316,23 +315,10 @@ export const LessonHlsPlayer = ({
             maybeFinishStartup()
         }
 
-        // Direct mode uses the pre-signed manifest as-is; token mode resolves it via
-        // the stream-gateway playlist endpoint. Everything downstream is identical.
-        const resolveSrc = async (): Promise<string | null> => {
-            if (manifestUrl) return manifestUrl
-            if (!videoRef) return null
-            const res = await fetch(
-                `${STREAM_BASE}/api/videos/${encodeURIComponent(videoRef)}/playlist?presign=true`,
-            )
-            if (!res.ok) throw new Error(`playlist ${res.status}`)
-            const data = (await res.json()) as PlaylistResponse
-            return data.cdnPlaylistUrl ?? data.presignedUrl ?? null
-        }
-
         const play = async () => {
             try {
-                const src = await resolveSrc()
-                if (!src || cancelled) throw new Error("no playlist url")
+                const src = manifestUrl
+                if (cancelled) return
                 // Prefer MediaSource on browsers that support hls.js. Recent desktop
                 // Chromium builds can report `maybe` for native HLS, then fetch only the
                 // first MPEG-TS fragment and remain at HAVE_NOTHING forever. Safari/iOS
@@ -449,7 +435,7 @@ export const LessonHlsPlayer = ({
             el.removeEventListener("canplay", onMediaReady)
             hls?.destroy()
         }
-    }, [videoRef, manifestUrl, attempt])
+    }, [manifestUrl, attempt])
 
     if (failed) {
         return (

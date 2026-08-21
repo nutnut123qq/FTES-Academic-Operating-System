@@ -132,6 +132,15 @@ export const LessonHlsPlayer = ({
      * hiểu là người dùng tua về đầu (neo lại lần nữa ở 0), và bộ báo tiến độ PUT vị trí 0 lên BE.
      */
     const reloadingRef = useRef(false)
+    /**
+     * Trước lúc nạp lại, video có đang chạy không. Nạp lại là dựng lại MediaSource nên thẻ <video>
+     * luôn quay về trạng thái tạm dừng — không nhớ điều này thì người xem tua xong thấy video đứng
+     * im ở đúng chỗ vừa tua và phải bấm phát lại, một hành vi không ai chờ đợi.
+     */
+    const wasPlayingRef = useRef(false)
+    /** `isGated` bản mới nhất cho code chạy trong effect (prop trong closure là bản cũ). */
+    const isGatedRef = useRef(isGated)
+    isGatedRef.current = isGated
     const windowPolicyRef = useRef<HlsWindowPolicy | null>(null)
     const halfFiredRef = useRef(false)
     const resumePositionRef = useRef(0)
@@ -186,6 +195,7 @@ export const LessonHlsPlayer = ({
         if (now - lastAnchorAtRef.current < ANCHOR_MIN_INTERVAL_MS) return
         lastAnchorAtRef.current = now
         reloadingRef.current = true
+        wasPlayingRef.current = !videoEl.current?.paused
         resumePositionRef.current = seconds
         anchorRef.current = seconds
         setAnchorSeconds(seconds)
@@ -381,6 +391,7 @@ export const LessonHlsPlayer = ({
             refreshHistoryRef.current.push(now)
             resumePositionRef.current = el.currentTime
             reloadingRef.current = true
+            wasPlayingRef.current = !el.paused
             // Neo lại tại chỗ đang đứng: nguồn mới phải ký quanh ĐÂY, không phải quanh chỗ cũ —
             // nếu không thì tua xa xong sẽ xin lại đúng một manifest cũng không mở được đoạn đó.
             anchorRef.current = el.currentTime
@@ -435,12 +446,23 @@ export const LessonHlsPlayer = ({
             // `startPosition` của hls.js đã lo phần lớn ca này, nhưng không phải đường nào cũng có
             // (HLS native), nên kiểm lại tận nơi thay vì tin vào cấu hình.
             if (reloadingRef.current) {
+                // Phát tiếp SAU khi đã về đúng chỗ. Không phát khi cửa sổ xem thử đã đóng — ở đó
+                // trình phát phải đứng yên, tự phát tiếp là mở lại thứ vừa bị khoá.
+                const resumePlayback = () => {
+                    if (!wasPlayingRef.current || isGatedRef.current) return
+                    wasPlayingRef.current = false
+                    void el.play().catch(() => undefined)
+                }
                 const resume = resumeAt()
                 if (resume > 0 && Math.abs(el.currentTime - resume) > 1) {
-                    el.addEventListener("seeked", () => { reloadingRef.current = false }, { once: true })
+                    el.addEventListener("seeked", () => {
+                        reloadingRef.current = false
+                        resumePlayback()
+                    }, { once: true })
                     el.currentTime = resume
                 } else {
                     reloadingRef.current = false
+                    resumePlayback()
                 }
             }
             maybeFinishStartup()

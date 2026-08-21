@@ -110,8 +110,8 @@ describe("useQueryMyGamificationSwr", () => {
         expect(data?.streak.days).toEqual(["2026-07-14", "2026-07-16"])
         // 1-based board index of the viewer
         expect(data?.rank.position).toBe(2)
-        // 1500 XP → gold tier (rules.ts RANK_TIERS)
-        expect(data?.rank.league).toBe("gold")
+        // 1500 XP → bronze tier (leaderboardTiers.ts RANK_TIERS)
+        expect(data?.rank.league).toBe("bronze")
         expect(data?.badges).toEqual([
             {
                 id: "WEEK_OF_FIRE",

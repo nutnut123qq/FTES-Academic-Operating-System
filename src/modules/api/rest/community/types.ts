@@ -181,6 +181,19 @@ export interface CommentResponse {
     createdAt?: string
 }
 
+/**
+ * Một người quen được BE xếp hạng cho popup `@mention`. Follow luôn đứng trước; phần còn lại
+ * dựa trên tần suất tương tác hai chiều quanh bài viết/bình luận.
+ */
+export interface MentionSuggestionResponse {
+    userId: string
+    username: string
+    displayName: string
+    avatarUrl?: string | null
+    followedByMe: boolean
+    interactionScore: number
+}
+
 /** Cursor-paginated page. */
 export interface FeedPage<T> {
     items: Array<T>

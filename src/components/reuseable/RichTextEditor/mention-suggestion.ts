@@ -1,15 +1,23 @@
 "use client"
 
 import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
+import { getMentionSuggestions } from "@/modules/api/rest/community"
 import { getMentionableUsers } from "@/modules/api/rest/profile"
 import type { FollowEntry } from "@/modules/api/rest/profile"
+import type { MentionSuggestionResponse } from "@/modules/api/rest/community"
 
 /** One mentionable user rendered in the `@` typeahead. */
 export interface MentionUser {
+    /** Stable identity used for de-duplication across personalized + prefix sources. */
+    userId: string
     /** Public username used in profile URL. */
     username: string
     /** Display name rendered in the editor and serialized markdown. */
     displayName: string
+    /** Public avatar shown in the Facebook-style suggestion row. */
+    avatarUrl?: string | null
+    /** Why this row was personalized; absent for a plain prefix-search result. */
+    source?: "following" | "interaction"
 }
 
 /** Quiet period before a keystroke turns into a request. */
@@ -17,6 +25,9 @@ export const MENTION_DEBOUNCE_MS = 250
 
 /** Max suggestions rendered in the popup. */
 export const MENTION_LIMIT = 5
+
+/** Load a few extra personalized candidates so filtering a typed prefix still has useful rows. */
+export const MENTION_RECOMMENDATION_LIMIT = 10
 
 /**
  * Adapts a mentionable-user row into a mention entry. A row without a username
@@ -26,12 +37,43 @@ export const MENTION_LIMIT = 5
  * @param entry - one row from `GET /api/v1/profiles/mentionable`.
  */
 const toMentionUser = (entry: FollowEntry): MentionUser => ({
+    userId: entry.userId,
     username: entry.username ?? "",
     displayName: entry.displayName || entry.username || "",
+    avatarUrl: entry.avatarUrl,
 })
 
+const toRecommendedMentionUser = (entry: MentionSuggestionResponse): MentionUser => ({
+    userId: entry.userId,
+    username: entry.username ?? "",
+    displayName: entry.displayName || entry.username || "",
+    avatarUrl: entry.avatarUrl,
+    source: entry.followedByMe ? "following" : "interaction",
+})
+
+const normalize = (value: string): string =>
+    value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase()
+
+const matchesPrefix = (user: MentionUser, query: string): boolean => {
+    const needle = normalize(query)
+    return normalize(user.username).startsWith(needle)
+        || normalize(user.displayName).startsWith(needle)
+}
+
+const uniqueUsers = (users: Array<MentionUser>): Array<MentionUser> => {
+    const seen = new Set<string>()
+    return users.filter((user) => {
+        const key = user.userId || user.username.toLocaleLowerCase()
+        if (!user.username || seen.has(key)) {
+            return false
+        }
+        seen.add(key)
+        return true
+    })
+}
+
 /**
- * Looks up mentionable users by PREFIX.
+ * Combines PERSONALIZED people with the global prefix lookup.
  *
  * Uses `GET /api/v1/profiles/mentionable`, NOT the search index. The index runs on
  * `websearch_to_tsquery`, which matches whole words: typing `fro` returns nothing
@@ -43,22 +85,28 @@ const toMentionUser = (entry: FollowEntry): MentionUser => ({
  * user is never interrupted by an editor-level error.
  *
  * @param query - the raw text typed after `@`.
+ * With an empty query (the instant `@` is typed), only personalized rows are shown: followed
+ * people first, then frequent interactions. Once text is typed, matching personalized rows stay
+ * first and `/profiles/mentionable` fills the remaining slots, so a new person is still taggable.
+ *
  * @returns at most {@link MENTION_LIMIT} mentionable users.
  */
 export const searchMentionUsers = async (query: string): Promise<Array<MentionUser>> => {
     const q = query.trim()
-    if (!q) {
-        return []
-    }
-    try {
-        const entries = await getMentionableUsers(q, MENTION_LIMIT)
-        return (entries ?? [])
-            .map(toMentionUser)
-            .filter((user) => Boolean(user.username))
-            .slice(0, MENTION_LIMIT)
-    } catch {
-        return []
-    }
+    const recommendedRequest = getMentionSuggestions(MENTION_RECOMMENDATION_LIMIT)
+        .catch(() => [] as Array<MentionSuggestionResponse>)
+    const prefixRequest = q
+        ? getMentionableUsers(q, MENTION_LIMIT).catch(() => [] as Array<FollowEntry>)
+        : Promise.resolve([] as Array<FollowEntry>)
+
+    const [recommended, prefixMatches] = await Promise.all([recommendedRequest, prefixRequest])
+    const personalized = (recommended ?? [])
+        .map(toRecommendedMentionUser)
+        .filter((user) => !q || matchesPrefix(user, q))
+    return uniqueUsers([
+        ...personalized,
+        ...(prefixMatches ?? []).map(toMentionUser),
+    ]).slice(0, MENTION_LIMIT)
 }
 
 /**
@@ -142,12 +190,41 @@ export const mentionSuggestion = {
             currentProps.items.forEach((item, index) => {
                 const button = document.createElement("button")
                 button.type = "button"
-                button.className = `w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+                button.className = `flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors ${
                     index === selectedIndex
                         ? "bg-accent/10 text-accent"
                         : "text-foreground hover:bg-default"
                 }`
-                button.textContent = `${item.displayName} (@${item.username})`
+
+                const avatar = document.createElement("span")
+                avatar.className = "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-default text-xs font-semibold"
+                if (item.avatarUrl) {
+                    const image = document.createElement("img")
+                    image.src = item.avatarUrl
+                    image.alt = ""
+                    image.loading = "lazy"
+                    image.className = "size-full object-cover"
+                    avatar.appendChild(image)
+                } else {
+                    avatar.textContent = item.displayName.trim().charAt(0).toLocaleUpperCase() || "?"
+                }
+
+                const copy = document.createElement("span")
+                copy.className = "flex min-w-0 flex-1 flex-col"
+                const name = document.createElement("span")
+                name.className = "truncate font-medium"
+                name.textContent = item.displayName
+                const meta = document.createElement("span")
+                meta.className = "truncate text-xs text-muted"
+                const isVi = document.documentElement.lang.toLocaleLowerCase().startsWith("vi")
+                const source = item.source === "following"
+                    ? (isVi ? "Đang theo dõi" : "Following")
+                    : item.source === "interaction"
+                        ? (isVi ? "Hay tương tác" : "Frequently interacted")
+                        : ""
+                meta.textContent = `@${item.username}${source ? ` · ${source}` : ""}`
+                copy.append(name, meta)
+                button.append(avatar, copy)
                 button.addEventListener("click", () => selectItem(index))
                 list.appendChild(button)
             })

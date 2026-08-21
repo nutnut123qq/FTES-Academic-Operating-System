@@ -9,6 +9,7 @@ import type {
     FeedPage,
     LeaderboardResponse,
     MediaUploadResponse,
+    MentionSuggestionResponse,
     ModerationDecisionRequest,
     ModerationQueueResponse,
     PollResponse,
@@ -503,6 +504,24 @@ export const getFollowedUserIds = async (
         method: "GET",
         url: "/community/follows/me",
         params: { userIds: userIds.join(",") },
+    })
+}
+
+/**
+ * Gợi ý cá nhân hoá hiện NGAY khi caller vừa gõ `@`: người đang follow trước, sau đó người hay
+ * tương tác hai chiều. Tìm người theo prefix vẫn dùng `/profiles/mentionable`; popup hợp nhất hai
+ * nguồn để vừa gần gũi vừa không làm mất khả năng tag một người mới.
+ *
+ * `GET /api/v1/community/mention-suggestions?limit=`
+ */
+export const getMentionSuggestions = async (
+    limit = 10,
+): Promise<Array<MentionSuggestionResponse>> => {
+    return restRequest<Array<MentionSuggestionResponse>>({
+        method: "GET",
+        url: "/community/mention-suggestions",
+        params: { limit },
+        authenticated: true,
     })
 }
 

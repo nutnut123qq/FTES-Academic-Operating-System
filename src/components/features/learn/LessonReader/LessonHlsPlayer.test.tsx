@@ -8,6 +8,7 @@ const h = vi.hoisted(() => ({
     instance: null as null | {
         config: Record<string, unknown>
         attachMedia: ReturnType<typeof vi.fn>
+        loadSource: ReturnType<typeof vi.fn>
         emit: (event: string, data: Record<string, unknown>) => void
         recoverMediaError: ReturnType<typeof vi.fn>
         startLoad: ReturnType<typeof vi.fn>
@@ -95,6 +96,7 @@ vi.mock("./hooks/useWatchPositionReporter", () => ({
 }))
 
 vi.mock("./hlsVodManifest", () => ({
+    getHlsErrorStatus: (data: { response?: { code?: number } }) => data.response?.code ?? null,
     getHlsUrlTokenExpiryMs: () => null,
     prepareHlsVodManifestSource: (url: string) => Promise.resolve({
         url,
@@ -133,38 +135,20 @@ afterEach(() => {
 })
 
 describe("LessonHlsPlayer startup buffering", () => {
-    it("does not attach MediaSource until all five parallel prefetches settle", async () => {
-        const responses: Array<(value: unknown) => void> = []
-        vi.stubGlobal("fetch", vi.fn(() => new Promise((resolve) => responses.push(resolve))))
+    it("attaches MediaSource before loading the manifest and lets hls.js start immediately", async () => {
         renderPlayer()
         await waitFor(() => expect(h.instance).toBeTruthy())
         const instance = h.instance!
 
-        act(() => {
-            instance.emit("level-loaded", {
-                details: {
-                    targetduration: 5,
-                    fragments: Array.from({ length: 5 }, (_, index) => ({
-                        duration: 4.166667,
-                        byteRange: [],
-                        url: `https://video.example/seg_${index}.ts`,
-                    })),
-                },
-            })
-        })
-        expect(fetch).toHaveBeenCalledTimes(5)
-        expect(instance.attachMedia).not.toHaveBeenCalled()
-        expect(instance.startLoad).not.toHaveBeenCalled()
-
-        responses.forEach((resolve, index) => resolve({
-            ok: true,
-            arrayBuffer: () => Promise.resolve(new Uint8Array([index]).buffer),
-        }))
-        await waitFor(() => expect(instance.attachMedia).toHaveBeenCalledTimes(1))
-        expect(instance.startLoad).toHaveBeenCalledWith(0)
+        expect(instance.attachMedia).toHaveBeenCalledTimes(1)
+        expect(instance.loadSource).toHaveBeenCalledWith("https://video.example/master.m3u8")
+        expect(instance.attachMedia.mock.invocationCallOrder[0])
+            .toBeLessThan(instance.loadSource.mock.invocationCallOrder[0])
+        expect(instance.config.autoStartLoad).toBe(true)
+        expect(instance.config.startFragPrefetch).toBe(true)
     })
 
-    it("keeps loading until metadata and five distinct media fragments are buffered", async () => {
+    it("exposes playback as soon as media metadata is ready while buffering ahead", async () => {
         const { container } = renderPlayer()
         await waitFor(() => expect(h.instance).toBeTruthy())
         const instance = h.instance!
@@ -182,38 +166,29 @@ describe("LessonHlsPlayer startup buffering", () => {
                 },
             })
         })
-        await waitFor(() => expect(instance.startLoad).toHaveBeenCalledWith(0))
-        expect(fetch).toHaveBeenCalledTimes(5)
-        expect(instance.config.startFragPrefetch).toBe(false)
-        expect(instance.config.maxBufferLength).toBe(31)
+        expect(fetch).not.toHaveBeenCalled()
+        expect(instance.config.maxBufferLength).toBe(60)
 
         fireEvent.loadedMetadata(video)
-        for (let sn = 0; sn < 4; sn += 1) {
-            act(() => {
-                instance.emit("frag-buffered", { frag: { type: "main", level: 0, sn } })
-            })
-        }
-        expect(screen.getByTestId("startup-loading")).toBeTruthy()
-
-        act(() => {
-            instance.emit("frag-buffered", { frag: { type: "main", level: 0, sn: 4 } })
-        })
         await waitFor(() => expect(screen.queryByTestId("startup-loading")).toBeNull())
     })
 
-    it("does not count duplicate or audio fragments toward the five-segment gate", async () => {
-        const { container } = renderPlayer()
+    it("raises the forward-buffer target when five long fragments exceed sixty seconds", async () => {
+        renderPlayer()
         await waitFor(() => expect(h.instance).toBeTruthy())
         const instance = h.instance!
-        fireEvent.loadedMetadata(container.querySelector("video")!)
 
         act(() => {
-            instance.emit("frag-buffered", { frag: { type: "main", level: 0, sn: 0 } })
-            instance.emit("frag-buffered", { frag: { type: "main", level: 0, sn: 0 } })
-            instance.emit("frag-buffered", { frag: { type: "audio", level: 0, sn: 1 } })
+            instance.emit("level-loaded", {
+                details: {
+                    targetduration: 15,
+                    fragments: Array.from({ length: 8 }, () => ({ duration: 15 })),
+                },
+            })
         })
 
-        expect(screen.getByTestId("startup-loading")).toBeTruthy()
+        expect(instance.config.maxBufferLength).toBe(76)
+        expect(instance.config.maxMaxBufferLength).toBe(300)
     })
 
     it("recovers MediaSource when a downloaded segment never produces metadata", async () => {

@@ -7,23 +7,51 @@ export interface PreparedHlsSource {
 const NOOP = () => undefined
 
 const decodeTokenExpiryMs = (token: string): number | null => {
-    try {
-        const encoded = token.split(".")[0].replace(/-/g, "+").replace(/_/g, "/")
-        const padded = encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=")
-        const payload = JSON.parse(atob(padded)) as { e?: unknown }
-        return typeof payload.e === "number" ? payload.e * 1000 : null
-    } catch {
-        return null
+    for (const tokenPart of token.split(".")) {
+        try {
+            const encoded = tokenPart.replace(/-/g, "+").replace(/_/g, "/")
+            const padded = encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=")
+            const payload = JSON.parse(atob(padded)) as { e?: unknown; exp?: unknown }
+            const expiry = typeof payload.e === "number" ? payload.e : payload.exp
+            if (typeof expiry === "number") return expiry * 1000
+        } catch {
+            // JWT headers/signatures and opaque signature parts are not JSON expiry payloads.
+        }
     }
+
+    return null
 }
 
 export const getHlsUrlTokenExpiryMs = (url: string): number | null => {
     try {
-        const token = new URL(url).searchParams.get("t")
-        return token ? decodeTokenExpiryMs(token) : null
+        const parameters = new URL(url).searchParams
+        for (const parameter of ["t", "grant", "token"]) {
+            const token = parameters.get(parameter)
+            const expiry = token ? decodeTokenExpiryMs(token) : null
+            if (expiry !== null) return expiry
+        }
     } catch {
         return null
     }
+
+    return null
+}
+
+type HlsErrorLike = {
+    response?: { code?: number; status?: number }
+    networkDetails?: { status?: number; statusCode?: number }
+}
+
+/** hls.js exposes CDN status in different fields for fetch and XHR loaders. */
+export const getHlsErrorStatus = (data: unknown): number | null => {
+    const error = data as HlsErrorLike
+    const statuses = [
+        error.response?.code,
+        error.response?.status,
+        error.networkDetails?.status,
+        error.networkDetails?.statusCode,
+    ]
+    return statuses.find((status) => typeof status === "number") ?? null
 }
 
 export const getHlsManifestTokenExpiryMs = (manifest: string): number | null => {

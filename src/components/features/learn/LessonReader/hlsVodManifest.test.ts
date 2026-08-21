@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
+    getHlsErrorStatus,
     getHlsManifestTokenExpiryMs,
     getHlsUrlTokenExpiryMs,
     normalizeHlsVodManifest,
@@ -22,6 +23,17 @@ describe("FTES VOD manifest normalization", () => {
         expect(getHlsUrlTokenExpiryMs(segmentUrl)).toBe(1_787_311_002_000)
         expect(getHlsManifestTokenExpiryMs(`#EXTM3U\n#EXTINF:5,\n${segmentUrl}\n`))
             .toBe(1_787_311_002_000)
+
+        const jwtHeader = btoa(JSON.stringify({ alg: "HS256" })).replace(/=/g, "")
+        const jwtPayload = btoa(JSON.stringify({ exp: 1_787_311_100 })).replace(/=/g, "")
+        expect(getHlsUrlTokenExpiryMs(
+            `https://stream.ftes.vn/master.m3u8?grant=${jwtHeader}.${jwtPayload}.signature`,
+        )).toBe(1_787_311_100_000)
+    })
+
+    it("reads CDN authorization status from fetch and XHR error shapes", () => {
+        expect(getHlsErrorStatus({ response: { code: 403 } })).toBe(403)
+        expect(getHlsErrorStatus({ networkDetails: { status: 401 } })).toBe(401)
     })
 
     it("removes a dangling EXTINF and closes a generated VOD playlist", () => {

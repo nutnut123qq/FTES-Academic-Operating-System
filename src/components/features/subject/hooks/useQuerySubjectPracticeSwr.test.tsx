@@ -40,6 +40,13 @@ vi.mock("@/modules/api/rest/subject/subject", () => ({
 }))
 vi.mock("@/modules/api/rest/subject", () => ({
     getSubjectDetail: (...a: Array<unknown>) => getSubjectDetail(...a),
+    // Kho thẻ ghi nhớ (8d39a49b) thêm lời gọi này vào hook nhưng mock ở đây không có
+    // ⇒ vitest ném "No export is defined on the mock" và ĐỎ TOÀN BỘ file test, chặn mọi
+    // PR của repo. Mock là factory nên nó phải khai ĐỦ mọi export hook đụng tới; thêm một
+    // lời gọi vào hook thì phải thêm vào đây cùng lúc.
+    // Trả null = nhánh best-effort của hook (khách chưa đăng nhập), nên bộ ca cũ giữ
+    // nguyên ý nghĩa: thẻ flashcards đếm 0, phần còn lại của hub không đổi.
+    getSubjectFlashcards: () => Promise.resolve(null),
 }))
 vi.mock("@/modules/api/rest/resource", () => ({
     listResources: (...a: Array<unknown>) => listResources(...a),
@@ -108,6 +115,7 @@ describe("useQuerySubjectPracticeSwr", () => {
         const modules = await runFetcher()
         expect(modules).toEqual([
             { key: "fe", count: 4 },
+            { key: "flashcards", count: 0 },
             { key: "coding", count: 0 },
         ])
     })
@@ -117,6 +125,7 @@ describe("useQuerySubjectPracticeSwr", () => {
         expect(listChallenges).toHaveBeenCalledWith({ subjectId: "uuid-jpd113" })
         expect(modules).toEqual([
             { key: "fe", count: 4 },
+            { key: "flashcards", count: 0 },
             { key: "coding", count: 3 },
         ])
     })
@@ -136,6 +145,7 @@ describe("useQuerySubjectPracticeSwr", () => {
         const modules = await runFetcher()
         expect(modules).toEqual([
             { key: "fe", count: 0 },
+            { key: "flashcards", count: 0 },
             { key: "coding", count: 3 },
         ])
     })

@@ -285,7 +285,13 @@ const StudySession = ({
                 <div className="flex flex-col items-center gap-3 rounded-2xl border border-default p-8 text-center">
                     <Typography type="body" weight="medium">
                         {deck.locked
-                            ? t("practice.flashcards.previewOver", { preview: deck.cards.length, total: deck.cardCount })
+                            // `remaining` = tổng thật TRỪ phần đã học thử. Truyền thẳng
+                            // `cardCount` là nói "còn 251 thẻ" ngay sau khi người ta vừa học 5
+                            // thẻ trong đúng bộ 251 thẻ đó — thừa 5, và sai ở chỗ dễ soi nhất.
+                            ? t("practice.flashcards.previewOver", {
+                                preview: deck.cards.length,
+                                remaining: Math.max(0, deck.cardCount - deck.cards.length),
+                            })
                             : t("practice.flashcards.sessionDone")}
                     </Typography>
                     {deck.locked ? (
@@ -305,7 +311,10 @@ const StudySession = ({
                     <Typography type="body-xs" color="muted">
                         {t("practice.flashcards.position", {
                             index: index + 1,
-                            total: queue.length,
+                            // Bộ đang KHOÁ thì mẫu số là TỔNG THẺ THẬT, không phải số thẻ học
+                            // thử: "Thẻ 5/5" trông như đã học hết bộ, còn "Thẻ 5/251" mới nói
+                            // đúng rằng người học mới chạm phần đầu của kho.
+                            total: deck.locked ? deck.cardCount : queue.length,
                         })}
                     </Typography>
 

@@ -6174,7 +6174,7 @@
                 "previewMeta": "Học thử {preview}/{total} thẻ",
                 "upsell": "Kho thẻ của môn dành cho hội viên. Bạn đang học thử vài thẻ đầu mỗi bộ.",
                 "subscribe": "Đăng ký hội viên 30k/tháng",
-                "previewOver": "Bạn đã học hết {preview} thẻ học thử. Còn {total} thẻ trong bộ này dành cho hội viên.",
+                "previewOver": "Bạn đã học hết {preview} thẻ học thử. Còn {remaining} thẻ nữa dành cho hội viên.",
                 "sessionDone": "Xong phiên ôn — hẹn gặp lại khi thẻ đến hạn.",
                 "restart": "Học lại từ đầu",
                 "position": "Thẻ {index}/{total}",

@@ -6174,7 +6174,7 @@
                 "previewMeta": "Preview {preview} of {total}",
                 "upsell": "This subject's decks are for members. You are previewing the first few cards of each deck.",
                 "subscribe": "Join for 30k/month",
-                "previewOver": "That was all {preview} preview cards. The other {total} in this deck are for members.",
+                "previewOver": "That was all {preview} preview cards. The other {remaining} are for members.",
                 "sessionDone": "Session done — come back when cards are due.",
                 "restart": "Start over",
                 "position": "Card {index} of {total}",

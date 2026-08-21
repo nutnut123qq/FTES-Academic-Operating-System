@@ -4,11 +4,10 @@ import { HomeLanding } from "@/components/features/home-landing/HomeLanding"
 /**
  * `/[locale]` — the academic-OS landing (product tour + bento).
  *
- * The ONLY route that turns the signed-in redirect on. This is where a bare domain
- * lands and where a guest signs in through the landing's own modal, so "already signed
- * in → straight to the workspace" (góp ý #23) belongs here. `/[locale]/home` renders the
- * same landing WITHOUT the redirect, so the marketing page stays reachable.
+ * Renders the landing for EVERYONE, signed in or not. The "already signed in → straight
+ * to the dashboard" redirect (góp ý #23) was removed on 2026-08-21 by the product owner's
+ * call; see the {@link HomeLanding} docblock for why it kept costing more than it bought.
  */
-const Page = () => <HomeLanding redirectSignedIn />
+const Page = () => <HomeLanding />
 
 export default Page

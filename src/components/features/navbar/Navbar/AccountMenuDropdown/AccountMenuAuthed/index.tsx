@@ -103,11 +103,10 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
      * it does not navigate, so signing out from a session-scoped page (`/dashboard`,
      * `/courses/me`, `/wallet`) left the just-signed-out viewer parked on it reading
      * empty widgets. `replace`, not `push` — Back must not walk into the page they were
-     * signed out of. `home()` is the UNGATED `/home` landing, which never forwards
-     * anyone — the right destination for someone who is a GUEST again the moment the
-     * sign-out resolves. (The bare locale root `/` would also be reachable — `proxy.ts`
-     * gates only `/admin` — but it forwards signed-in visitors to the dashboard, so it is
-     * the wrong shape of destination to lean on here.)
+     * signed out of. `home()` is the `/home` landing, which forwards nobody —
+     * the right destination for someone who is a GUEST again the moment the sign-out
+     * resolves. (The bare locale root `/` renders the same landing and would work too;
+     * `proxy.ts` gates only `/admin`.)
      *
      * Order: `close()` runs FIRST, while it is still synchronous — the awaited sign-out
      * flips `authenticated` to false in its `finally`, which swaps this menu for

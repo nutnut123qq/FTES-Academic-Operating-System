@@ -179,7 +179,8 @@ export const useQueryUserSwr = () => {
      * khách/lỗi. Treo vào `authReady()` chứ không dispatch thẳng trong fetcher vì net
      * timeout cũng phải bật được cờ này: nếu backend không bao giờ trả lời, fetcher
      * không có đường ra nào, và một cờ `initialized` kẹt `false` khiến các chỗ đọc nó
-     * (`AccountMenuDropdown`, `HomeLanding`) skeleton vĩnh viễn.
+     * (`AccountMenuDropdown`) skeleton vĩnh viễn. (`HomeLanding` cũng từng đọc cờ này
+     * cho nhánh redirect của nó; nhánh đó gỡ ngày 2026-08-21.)
      */
     useEffect(
         () => {

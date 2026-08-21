@@ -60,7 +60,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
         void useAppearanceStore.persist.rehydrate()
     }, [])
     // Footer hiện ở LANDING — cả locale root ("/", "/vi", "/en") LẪN /home ("/home",
-    // "/vi/home"): /home là bản ungated của CÙNG trang landing (user đã login xem ở đây).
+    // "/vi/home"): hai đường dẫn render CÙNG một trang landing, ai cũng xem được.
     // Mọi trang khác (dashboard / learn / profile / auth / …) KHÔNG có footer — thầy chốt 2026-06-26.
     const footerPath = pathname ?? ""
     const showFooter = /^\/(?:[a-z]{2})?\/?$/.test(footerPath) || /^\/(?:[a-z]{2}\/)?home\/?$/.test(footerPath)

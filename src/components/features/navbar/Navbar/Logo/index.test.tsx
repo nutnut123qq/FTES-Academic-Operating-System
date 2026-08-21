@@ -3,16 +3,15 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
- * Regression — the navbar logo must land somewhere the visitor can actually stay.
+ * Regression — the navbar logo goes to `/home`, for everyone.
  *
- * It used to push `/home` unconditionally. That was correct until the landing started
- * bouncing signed-in visitors, at which point the single most common "take me home"
- * gesture threw them straight back out to the dashboard. The target now follows the
- * session: signed in → `/dashboard`, guest (or a session that has not settled yet) →
- * `/home`, which after `home-landing-redirect-scope` bounces nobody.
+ * It briefly branched on the session (signed in → `/dashboard`) while the landing bounced
+ * signed-in visitors and the logo therefore threw them straight back out. The product
+ * owner removed that redirect on 2026-08-21, so the branch went with it: one target, no
+ * session read.
  *
- * The mocked `@/i18n/navigation` router PREFIXES the locale the way the real one does,
- * so the assertions can name full paths: a locale accidentally baked into `pathConfig()`
+ * The mocked `@/i18n/navigation` router PREFIXES the locale the way the real one does, so
+ * the assertions can name full paths: a locale accidentally baked into `pathConfig()`
  * would surface here as `/vi/vi/home` rather than passing unnoticed. The real
  * `@/resources/path` is used on purpose so the asserted strings are the ones the
  * component genuinely produces.
@@ -20,16 +19,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const push = vi.fn()
 
-vi.mock("@/i18n/navigation", () => ({
-    useRouter: () => ({ push: (path: string) => push(`/vi${path}`) }),
-}))
-
-const session = vi.hoisted(() => ({ initialized: false, authenticated: false }))
+// Giữ CỐ Ý dù `./index` không còn import: nó dựng sẵn một phiên ĐÃ ĐĂNG NHẬP, nên ai dựng
+// lại nhánh "signed in → /dashboard" sẽ đỏ vì SAI ĐÍCH, chứ không phải vì crash thiếu
+// <Provider>. Đừng dọn mock này đi.
+const session = vi.hoisted(() => ({ initialized: true, authenticated: true }))
 
 vi.mock("@/redux/hooks", () => ({
     useAppSelector: (
         selector: (state: { keycloak: { initialized: boolean; authenticated: boolean } }) => unknown,
     ) => selector({ keycloak: session }),
+}))
+
+vi.mock("@/i18n/navigation", () => ({
+    useRouter: () => ({ push: (path: string) => push(`/vi${path}`) }),
 }))
 
 vi.mock("@heroui/react", () => ({
@@ -48,33 +50,18 @@ import { Logo } from "./index"
 describe("Logo destination", () => {
     beforeEach(() => {
         push.mockClear()
-        session.initialized = false
-        session.authenticated = false
     })
 
-    it("sends a signed-in visitor to the dashboard", () => {
-        session.initialized = true
-        session.authenticated = true
-
-        render(<Logo />)
-        fireEvent.click(screen.getByTestId("logo"))
-
-        expect(push.mock.calls).toEqual([["/vi/dashboard"]])
-    })
-
-    it("sends a guest to the landing", () => {
-        session.initialized = true
-        session.authenticated = false
-
+    it("goes to the landing", () => {
         render(<Logo />)
         fireEvent.click(screen.getByTestId("logo"))
 
         expect(push.mock.calls).toEqual([["/vi/home"]])
     })
 
-    it("leans towards the landing while the session has not settled", () => {
-        session.initialized = false
-        session.authenticated = false
+    it("goes to the landing for a signed-in visitor too", () => {
+        session.initialized = true
+        session.authenticated = true
 
         render(<Logo />)
         fireEvent.click(screen.getByTestId("logo"))

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useRef, useState, type ChangeEvent } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -97,11 +97,10 @@ const findLink = (profile: SelfProfile | undefined, match: (platform: string) =>
 
 /**
  * react-hook-form for the edit-profile form, wired to the real BE REST profile
- * endpoints. Seeds values from `GET /api/v1/profiles/me`, owns the picked-avatar
- * file state, and on submit runs (1) the avatar multipart upload (when a new file
- * is chosen), (2) `PATCH /me` for the text fields, then (3) `PUT /me/social-links`
- * (replace-all, preserving non-linkedin/website links). Revalidates the shared
- * self-profile SWR cache on success so the profile pages reflect the change.
+ * endpoints. Seeds values from `GET /api/v1/profiles/me`. A cropped avatar is uploaded
+ * immediately (independent from the text form), while submit runs `PATCH /me` for the
+ * text fields followed by `PUT /me/social-links` (replace-all, preserving other links).
+ * Both flows update the shared self-profile SWR cache so a refresh keeps the new avatar.
  *
  * @returns the RHF methods + `onSubmit` and the avatar helpers (`fileInputRef`,
  * `onPickAvatar`, `onAvatarChange`, `shownAvatar`).
@@ -116,9 +115,20 @@ export const useEditProfileForm = () => {
 
     // hidden <input type=file>, opened by the avatar button
     const fileInputRef = useRef<HTMLInputElement>(null)
-    // the freshly picked avatar file (null until the user chooses one) + its preview
+    // The cropped file stays here only while its immediate upload is in flight. This gives
+    // the user instant visual feedback without pretending the image is saved after refresh.
     const [file, setFile] = useState<File | null>(null)
     const [preview, setPreview] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (!file) {
+            setPreview(null)
+            return
+        }
+        const url = URL.createObjectURL(file)
+        setPreview(url)
+        return () => URL.revokeObjectURL(url)
+    }, [file])
 
     const schema = useMemo(
         () => z.object({
@@ -157,11 +167,28 @@ export const useEditProfileForm = () => {
     /** Open the native file picker. */
     const onPickAvatar = useCallback(() => fileInputRef.current?.click(), [])
 
-    /** Stage an avatar file + build a local preview URL (shared by picker + dropzone). */
-    const onAvatarFile = useCallback((next: File) => {
-        setFile(next)
-        setPreview(URL.createObjectURL(next))
-    }, [])
+    /** Upload a cropped avatar now; only report success once the server has persisted it. */
+    const onAvatarFile = useCallback(
+        async (next: File): Promise<boolean> => {
+            setFile(next)
+            const uploaded = await runRest(() => uploadAvatar(next), {
+                showSuccessToast: true,
+                showErrorToast: true,
+            })
+            if (!uploaded) {
+                setFile(null)
+                return false
+            }
+
+            // Use the profile returned by PUT immediately, then revalidate to prove the
+            // persisted value is what a fresh page load will read.
+            await mutate(uploaded, { revalidate: false })
+            setFile(null)
+            await mutate()
+            return true
+        },
+        [mutate, runRest],
+    )
 
     /** Capture the chosen file from the native picker. */
     const onAvatarChange = useCallback(
@@ -171,7 +198,7 @@ export const useEditProfileForm = () => {
             if (!next) {
                 return
             }
-            onAvatarFile(next)
+            void onAvatarFile(next)
         },
         [onAvatarFile],
     )
@@ -182,12 +209,8 @@ export const useEditProfileForm = () => {
     const onSubmit = form.handleSubmit(async (value) => {
         const result = await runRest(
             async () => {
-                // 1) upload the new avatar first (multipart PUT /me/avatar) so the URL
-                // is persisted before the pages re-read the profile
-                if (file) {
-                    await uploadAvatar(file)
-                }
-                // 2) persist the editable text fields; empty string clears the column
+                // Persist the editable text fields; avatar upload is an independent,
+                // immediate action and must not depend on this Save button.
                 await updateSelfProfile({
                     displayName: value.displayName.trim() ? value.displayName.trim() : null,
                     bio: value.bio.trim() ? value.bio.trim() : null,
@@ -200,7 +223,7 @@ export const useEditProfileForm = () => {
                     // nên gửi mù là biến lỗi đọc thành lệnh xoá ngành. Xem `majorCodePatch`.
                     majorCode: majorCodePatch(profile?.academic?.majorCode, value.majorCode),
                 })
-                // 3) social links (replace-all): keep any non-linkedin/website links the
+                // Social links (replace-all): keep any non-linkedin/website links the
                 // BE already stores, then re-add the two the form controls
                 const preserved: Array<ProfileSocialLinkInput> = (profile?.socialLinks ?? [])
                     .filter((link) => !isLinkedin(link.platform) && !isWebsite(link.platform))
@@ -221,10 +244,8 @@ export const useEditProfileForm = () => {
             },
             { showSuccessToast: true, showErrorToast: true },
         )
-        // on success clear the staged avatar + revalidate the shared profile cache
+        // Revalidate the shared profile cache after the text/social save.
         if (result) {
-            setFile(null)
-            setPreview(null)
             await mutate()
         }
     })

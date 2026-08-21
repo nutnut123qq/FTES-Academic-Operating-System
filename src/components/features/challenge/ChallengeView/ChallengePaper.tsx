@@ -104,16 +104,12 @@ export interface ChallengePaperProps {
      */
     createdAt?: string | null
     /**
-     * Rendered inside a DIALOG rather than on a page. The paper's whole `lg:` layout sizes
-     * itself off the VIEWPORT — a pinned two-pane frame `calc(100dvh-12rem)` tall whose
-     * right column scrolls in two capped strips — which a dialog cannot honour: the box is
-     * shorter than the viewport, so the frame overflows it and the hand-in panel ends up
-     * trapped in a 45%-tall strip nested inside a scrolling dialog.
+     * Rendered inside a DIALOG rather than on a page. The FE-style two-pane layout stays,
+     * but its viewport-pinned height and capped nested scrollers do not: the dialog is
+     * shorter than the viewport and owns the vertical scroll.
      *
-     * Set it and the surface falls back to the layout it ALREADY has below `lg`: panes
-     * stacked, nothing pinned, everything at its natural height, scrolled by whatever box
-     * contains it. Nothing is hidden or trimmed — the hand-in panel renders whole and is
-     * reached by scrolling the dialog.
+     * Below `lg` the panes still stack naturally. From `lg` up, the paper stays left and
+     * the hand-in/uploader/comments column stays right, matching {@link SubjectFeAlbum}.
      */
     inModal?: boolean
 }
@@ -125,10 +121,9 @@ export interface ChallengePaperProps {
  * tagged challenge carries the paper file, the learner reads it on the LEFT and hands an
  * answer in on the RIGHT — the two-pane shape of the FE album
  * (`SubjectFeAlbum`): `lg:grid-cols-[minmax(0,1fr)_400px]`, the paper letterboxed on
- * black, the right pane on `bg-overlay` scrolling on its own; below `lg` the panes stack
- * with the paper first, because the paper is what the reader came for. That stacked layout
- * is also what a DIALOG gets at every width ({@link ChallengePaperProps.inModal}): the
- * two-pane frame is measured against the viewport, which a dialog box is not.
+ * black, the right pane on `bg-overlay`; below `lg` the panes stack with the paper first,
+ * because the paper is what the reader came for. A dialog keeps those same responsive
+ * columns but drops the viewport-derived height and nested scroll caps.
  *
  * **The hand-in block exists but is GATED** — see {@link IS_PAPER_GRADING_OPEN}. AI
  * grading for papers is sold later, so the block renders in full and does nothing: no file
@@ -286,11 +281,10 @@ export const ChallengePaper = ({
                         ? expand.frameClassName
                         : cn(
                             "overflow-hidden rounded-2xl border border-separator",
-                            // ponytail: ONE switch for the whole viewport-pinned layout — in a
-                            // dialog every `lg:` rule below is simply not emitted, which leaves the
-                            // stacked layout this surface already ships below `lg`. No modal-only
-                            // sizing was invented; the box that contains it does the scrolling.
-                            !inModal && "lg:grid lg:grid-cols-[minmax(0,1fr)_400px]",
+                            // Same responsive columns as the FE popup. `inModal` only removes
+                            // viewport-derived HEIGHT/scroll caps below; it must not move the
+                            // discussion under the paper on a desktop dialog.
+                            "lg:grid lg:grid-cols-[minmax(0,1fr)_400px]",
                             // A 0-floored row + `min-h-0` on the pane are what let a PORTRAIT scan
                             // shrink to the frame instead of inflating it: a grid item's automatic
                             // minimum size is its CONTENT, and `overflow-hidden` then clips it.

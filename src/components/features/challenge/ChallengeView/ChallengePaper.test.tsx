@@ -240,13 +240,12 @@ describe("ChallengePaper — the gated hand-in column", () => {
 })
 
 /**
- * Inside a DIALOG the surface must stop measuring itself against the VIEWPORT. The pins are
- * about scrolling, not looks: a `100dvh`-tall frame overflows a dialog box, and the capped
- * 45% strip would bury the (tall) hand-in panel inside a nested scroller. What must survive
- * is the panel itself — it is a real action, so it is rendered whole and simply scrolled to.
+ * Inside a DIALOG the surface must stop measuring itself against the VIEWPORT, while keeping
+ * the same responsive two-pane layout as FE. The dialog owns vertical scrolling; desktop
+ * placement remains paper-left, discussion-right.
  */
 describe("ChallengePaper — inside a dialog", () => {
-    it("drops every viewport-pinned rule so the DIALOG is what scrolls", () => {
+    it("keeps FE-style desktop columns but drops viewport-pinned sizing", () => {
         const { container } = setup("https://storage/de-pe.jpg", "image/png", {
             challengeId: "c-1",
             author: AUTHOR,
@@ -255,7 +254,7 @@ describe("ChallengePaper — inside a dialog", () => {
         const markup = container.innerHTML
         expect(markup).not.toContain("lg:h-[calc(100dvh-12rem)]")
         expect(markup).not.toContain("lg:max-h-[45%]")
-        expect(markup).not.toContain("lg:grid-cols-")
+        expect(markup).toContain("lg:grid-cols-[minmax(0,1fr)_400px]")
     })
 
     it("keeps the hand-in panel WHOLE — it is the reason the dialog scrolls", () => {

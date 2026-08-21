@@ -123,6 +123,15 @@ export const LessonHlsPlayer = ({
     const lastAnchorAtRef = useRef(0)
     /** Lúc bấm tạm dừng — để biết đã dừng bao lâu khi phát tiếp. */
     const pausedAtRef = useRef(0)
+    /**
+     * Đang nạp lại nguồn (neo lại vì tua, hoặc xin vé mới).
+     *
+     * <b>Đây là chỗ làm hỏng việc tua trên máy thật:</b> lúc nạp lại, `hls.destroy()` tháo media khỏi
+     * thẻ `<video>` nên `currentTime` tụt về 0 và trình duyệt bắn `timeupdate`/`seeked`/`pause` với
+     * giá trị đó. Không có cờ này thì mốc "quay về chỗ đang xem" bị ghi đè thành 0, `seeked(0)` bị
+     * hiểu là người dùng tua về đầu (neo lại lần nữa ở 0), và bộ báo tiến độ PUT vị trí 0 lên BE.
+     */
+    const reloadingRef = useRef(false)
     const windowPolicyRef = useRef<HlsWindowPolicy | null>(null)
     const halfFiredRef = useRef(false)
     const resumePositionRef = useRef(0)
@@ -144,7 +153,9 @@ export const LessonHlsPlayer = ({
         lessonId,
         getSnapshot: () => {
             const el = videoEl.current
-            if (!el) return null
+            // Đang nạp lại thì vị trí trên thẻ <video> là rác của quá trình nạp, không phải chỗ người
+            // ta đang xem — báo lên BE là ghi đè tiến độ THẬT bằng số 0.
+            if (!el || reloadingRef.current) return null
             return {
                 positionSeconds: el.currentTime,
                 durationSeconds: Number.isFinite(el.duration) ? el.duration : null,
@@ -174,6 +185,7 @@ export const LessonHlsPlayer = ({
         const now = Date.now()
         if (now - lastAnchorAtRef.current < ANCHOR_MIN_INTERVAL_MS) return
         lastAnchorAtRef.current = now
+        reloadingRef.current = true
         resumePositionRef.current = seconds
         anchorRef.current = seconds
         setAnchorSeconds(seconds)
@@ -192,7 +204,9 @@ export const LessonHlsPlayer = ({
         if (!el) return
 
         clampSeek()
-        resumePositionRef.current = el.currentTime
+        if (!reloadingRef.current) {
+            resumePositionRef.current = el.currentTime
+        }
         const duration = el.duration
         // Only hand up a REAL duration: it is NaN before `loadedmetadata` and Infinity on a
         // live manifest, and the up-next window must not arm on either.
@@ -209,6 +223,9 @@ export const LessonHlsPlayer = ({
     const lastPauseFlushRef = useRef(0)
 
     const handlePause = () => {
+        // `pause` do nạp lại sinh ra không phải người dùng bấm dừng: tính vào đó thì lần phát tiếp
+        // sẽ tưởng đã dừng lâu và neo lại thêm một lần nữa.
+        if (reloadingRef.current) return
         lastPauseFlushRef.current = Date.now()
         pausedAtRef.current = Date.now()
         reporter.onPaused()
@@ -220,6 +237,7 @@ export const LessonHlsPlayer = ({
      * play, video đứng im, CDN trả 403 rồi mới chữa — chậm hơn và trông như hỏng.
      */
     const handlePlay = () => {
+        if (reloadingRef.current) return
         reporter.onPlaying()
 
         const el = videoEl.current
@@ -243,12 +261,28 @@ export const LessonHlsPlayer = ({
 
     const handleSeeked = () => {
         clampSeek()
-        reporter.onSeeked()
 
         const el = videoEl.current
+        if (!el) return
+        if (reloadingRef.current) {
+            // `seeked` lúc này gần như luôn do chính việc nạp lại (media bị tháo → 0).
+            //
+            // ⚠️ ĐỪNG dùng `readyState` để phân biệt "người dùng tua tiếp": lúc media vừa bị tháo,
+            // `readyState` VẪN có thể > 0 trong một nhịp — tôi đã thử cách đó và nó chính là thứ ghi
+            // mốc quay-về thành 0, làm video chạy lại từ đầu. Chỉ nhận khi vị trí mới thực sự nằm
+            // trong bài (> 1 giây); ai tua đúng về 0:00 giữa lúc đang nạp thì tua lại một lần nữa.
+            if (el.currentTime > 1 && Math.abs(el.currentTime - resumePositionRef.current) > 2) {
+                resumePositionRef.current = el.currentTime
+                anchorRef.current = el.currentTime
+                setAnchorSeconds(el.currentTime)
+            }
+            return
+        }
+        reporter.onSeeked()
+
         const policy = windowPolicyRef.current
         // Server đời cũ không công bố cửa sổ → không có gì để tính; đường 403 vẫn đỡ được.
-        if (!el || !policy) return
+        if (!policy) return
         const delta = el.currentTime - anchorRef.current
         const tooFarAhead = delta > policy.leadSeconds * ANCHOR_LEAD_USE_RATIO
         const tooFarBehind = delta < -policy.ttlSeconds * ANCHOR_REWIND_USE_RATIO
@@ -321,6 +355,7 @@ export const LessonHlsPlayer = ({
         }
 
         const failStartup = () => {
+            reloadingRef.current = false
             if (cancelled) return
             clearStartupWatchdog()
             setFailed(true)
@@ -345,6 +380,7 @@ export const LessonHlsPlayer = ({
             sourceRefreshRequested = true
             refreshHistoryRef.current.push(now)
             resumePositionRef.current = el.currentTime
+            reloadingRef.current = true
             // Neo lại tại chỗ đang đứng: nguồn mới phải ký quanh ĐÂY, không phải quanh chỗ cũ —
             // nếu không thì tua xa xong sẽ xin lại đúng một manifest cũng không mở được đoạn đó.
             anchorRef.current = el.currentTime
@@ -386,8 +422,27 @@ export const LessonHlsPlayer = ({
             }, HLS_STARTUP_STALL_TIMEOUT_MS)
         }
 
+        /**
+         * Chỗ phải quay về sau khi nạp lại. Lấy MAX của mốc neo (state, chỉ đổi khi ta chủ động neo)
+         * và vị trí đang xem (ref, do sự kiện của thẻ <video> ghi). Ref có thể bị chính việc nạp lại
+         * ghi rác về 0 trong một nhịp; state thì không — nên state là chốt chặn cuối.
+         */
+        const resumeAt = () => Math.max(resumePositionRef.current, anchorSeconds)
+
         const onMediaReady = () => {
             mediaReady = true
+            // Nạp lại xong: đưa về ĐÚNG chỗ đang xem rồi mới mở lại các tín hiệu vị trí.
+            // `startPosition` của hls.js đã lo phần lớn ca này, nhưng không phải đường nào cũng có
+            // (HLS native), nên kiểm lại tận nơi thay vì tin vào cấu hình.
+            if (reloadingRef.current) {
+                const resume = resumeAt()
+                if (resume > 0 && Math.abs(el.currentTime - resume) > 1) {
+                    el.addEventListener("seeked", () => { reloadingRef.current = false }, { once: true })
+                    el.currentTime = resume
+                } else {
+                    reloadingRef.current = false
+                }
+            }
             maybeFinishStartup()
         }
 
@@ -498,6 +553,13 @@ export const LessonHlsPlayer = ({
                 } else if (el.canPlayType("application/vnd.apple.mpegurl")) {
                     usingNativeHls = true
                     el.src = src
+                    // HLS native không có startPosition: tự tua về chỗ cũ khi metadata sẵn sàng.
+                    if (resumeAt() > 0) {
+                        const resume = resumeAt()
+                        el.addEventListener("loadedmetadata", () => {
+                            if (!cancelled) el.currentTime = resume
+                        }, { once: true })
+                    }
                     // HLS native không có startPosition: tự tua về chỗ cũ khi metadata sẵn sàng.
                     if (resumePositionRef.current > 0) {
                         const resume = resumePositionRef.current

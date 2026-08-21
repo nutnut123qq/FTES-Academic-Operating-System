@@ -306,6 +306,7 @@ export const CommunityPostContent = ({
                             id: postId,
                             author: authorName,
                             authorUsername: post.authorUsername,
+                            authorAvatar: post.authorAvatar,
                             title: post.title,
                             snippet: splitBodyImages(unwrapAutolinks(renderedBody)).text.slice(
                                 0,

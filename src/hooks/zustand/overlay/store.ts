@@ -25,6 +25,7 @@ export interface CommunityQuoteContext {
     id: string
     author: string
     authorUsername: string
+    authorAvatar?: string | null
     title: string
     snippet: string
 }

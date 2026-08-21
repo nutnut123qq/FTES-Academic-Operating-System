@@ -15,6 +15,7 @@ export interface CourseQuestionAnswer {
     id: string
     authorName: string
     authorUsername: string
+    authorAvatar?: string | null
     body: string
     createdAt: string
     /** Answered by the course founder/instructor. */
@@ -28,6 +29,7 @@ export interface CourseQuestion {
     authorId: string
     authorName: string
     authorUsername: string
+    authorAvatar?: string | null
     body: string
     createdAt: string
     /** The lesson this question lives on (used to route replies to the right lesson). */

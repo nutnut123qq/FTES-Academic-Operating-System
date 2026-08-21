@@ -437,6 +437,7 @@ export const CommunityFeedRow = ({
                                     id: post.id,
                                     author: authorName,
                                     authorUsername: post.authorUsername,
+                                    authorAvatar: post.authorAvatar,
                                     title: post.title,
                                     snippet: post.snippet,
                                 })

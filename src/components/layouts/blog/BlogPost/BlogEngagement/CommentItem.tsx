@@ -79,7 +79,8 @@ export const CommentItem = ({
     const tRoot = useTranslations()
 
     const isOwn = currentUserId !== null && currentUserId === comment.userId
-    const hasAuthor = Boolean(comment.authorUsername)
+    const authorUsername = comment.author?.username ?? comment.authorUsername
+    const hasAuthor = Boolean(comment.author || authorUsername)
     // updatedAt strictly after createdAt means the body was edited at least once
     const isEdited = new Date(comment.updatedAt).getTime() > new Date(comment.createdAt).getTime()
 
@@ -87,7 +88,9 @@ export const CommentItem = ({
         <div className={cn("flex items-start gap-3", className)}>
             {hasAuthor ? (
                 <UserLink
-                    username={comment.authorUsername}
+                    username={authorUsername ?? ""}
+                    displayName={comment.author?.displayName}
+                    avatar={comment.author?.avatarUrl}
                     seed={comment.userId}
                     size="sm"
                     hideName
@@ -102,7 +105,12 @@ export const CommentItem = ({
                 {/* header line: author · relative time · edited */}
                 <div className="flex flex-wrap items-center gap-2">
                     {hasAuthor ? (
-                        <UserLink username={comment.authorUsername} size="sm" showAvatar={false} />
+                        <UserLink
+                            username={authorUsername ?? ""}
+                            displayName={comment.author?.displayName}
+                            size="sm"
+                            showAvatar={false}
+                        />
                     ) : (
                         <span className="text-sm font-medium text-foreground">
                             {t("anonymous")}

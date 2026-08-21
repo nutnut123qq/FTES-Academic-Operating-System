@@ -328,7 +328,8 @@ export const CourseRatings = ({ courseId, isEnrolled, className }: CourseRatings
                     {items.map((item) => (
                         <div key={item.id} className="flex items-start gap-3">
                             <UserAvatar
-                                username={item.userId}
+                                username={item.author?.username ?? item.author?.displayName ?? item.userId}
+                                avatar={item.author?.avatarUrl}
                                 seed={item.userId}
                                 size="sm"
                                 className="size-8 shrink-0"

@@ -11,6 +11,7 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 export interface QuotedPost {
     author: string
     authorUsername: string
+    authorAvatar?: string | null
     title: string
     snippet: string
     /**
@@ -65,6 +66,7 @@ export const QuotedPostCard = ({ post, className }: QuotedPostCardProps) => {
                 <UserLink
                     username={post.authorUsername}
                     displayName={post.author}
+                    avatar={post.authorAvatar}
                     hideName
                     size="sm"
                     classNames={{ avatar: "size-6" }}

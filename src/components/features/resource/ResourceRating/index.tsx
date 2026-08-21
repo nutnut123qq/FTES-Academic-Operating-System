@@ -368,7 +368,8 @@ export const ResourceRating = () => {
                             className="flex items-start gap-3 rounded-2xl border border-separator p-4"
                         >
                             <UserAvatar
-                                username={review.userId}
+                                username={review.author?.username ?? review.author?.displayName ?? review.userId}
+                                avatar={review.author?.avatarUrl}
                                 seed={review.userId}
                                 size="sm"
                                 className="size-8 shrink-0"

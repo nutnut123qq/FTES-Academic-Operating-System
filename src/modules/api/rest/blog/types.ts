@@ -101,6 +101,13 @@ export interface UpdateBlogCommentRequest {
     content: string
 }
 
+export interface BlogCommentAuthor {
+    userId: string
+    username?: string | null
+    displayName?: string | null
+    avatarUrl?: string | null
+}
+
 export interface BlogCommentResponse {
     id: string
     postId: string
@@ -119,6 +126,7 @@ export interface BlogCommentResponse {
      * `blog-admin-filter-and-engagement-seed`).
      */
     authorUsername?: string | null
+    author?: BlogCommentAuthor | null
 }
 
 export interface BlogCommentPage {

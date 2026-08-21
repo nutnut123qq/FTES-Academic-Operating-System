@@ -39,16 +39,14 @@ export interface RollupLesson {
 export interface RollupLabels {
     /** Label for the viewer's own comments. */
     you: string
-    /** Label for another learner's comments (the comment API carries no display name). */
+    /** Fallback label for another learner when the author card is absent. */
     member: string
     /** The signed-in viewer's id (or null) — drives the "you" label + the Mine filter. */
     currentUserId: string | null
 }
 
 /**
- * Resolves an author label. The lesson-comment API exposes only `userId` (no display
- * name), so we can only distinguish the viewer from everyone else — matching how the
- * per-lesson `LessonComments` thread labels rows.
+ * Resolves the fallback label used only when the lesson-comment author card is absent.
  */
 const authorLabel = (userId: string | null, labels: RollupLabels): string => {
     if (!userId) {
@@ -60,8 +58,9 @@ const authorLabel = (userId: string | null, labels: RollupLabels): string => {
 /** Maps a nested reply comment → a course-question answer. */
 const mapAnswer = (reply: LessonCommentView, labels: RollupLabels): CourseQuestionAnswer => ({
     id: reply.id,
-    authorName: authorLabel(reply.userId, labels),
-    authorUsername: reply.userId ?? "deleted",
+    authorName: reply.author?.displayName ?? reply.author?.username ?? authorLabel(reply.userId, labels),
+    authorUsername: reply.author?.username ?? reply.userId ?? "deleted",
+    authorAvatar: reply.author?.avatarUrl ?? null,
     body: reply.content,
     createdAt: reply.createdAt,
     // The comment API carries no founder/instructor flag yet, so answers stay unbadged.
@@ -76,8 +75,9 @@ export const mapCommentToQuestion = (
 ): CourseQuestion => ({
     id: comment.id,
     authorId: comment.userId ?? "",
-    authorName: authorLabel(comment.userId, labels),
-    authorUsername: comment.userId ?? "deleted",
+    authorName: comment.author?.displayName ?? comment.author?.username ?? authorLabel(comment.userId, labels),
+    authorUsername: comment.author?.username ?? comment.userId ?? "deleted",
+    authorAvatar: comment.author?.avatarUrl ?? null,
     body: comment.content,
     createdAt: comment.createdAt,
     lessonId: lesson.lessonId,

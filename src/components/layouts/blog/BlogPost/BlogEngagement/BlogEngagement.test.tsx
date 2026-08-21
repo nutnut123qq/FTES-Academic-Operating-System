@@ -77,8 +77,8 @@ vi.mock("@/components/blocks/async/AsyncContent", () => ({
 
 // identity/avatar are data owners (SWR + Redux) → replace with markers
 vi.mock("@/components/features/identity", () => ({
-    UserLink: ({ username }: { username?: string | null }) => (
-        <span data-testid="user-link">{username}</span>
+    UserLink: ({ username, avatar }: { username?: string | null; avatar?: string | null }) => (
+        <span data-testid="user-link" data-avatar={avatar ?? undefined}>{username}</span>
     ),
 }))
 // The composer is a rich-text editor (its own toolbar + icon set); a plain textarea
@@ -191,6 +191,33 @@ describe("BlogEngagement — guest gating", () => {
 })
 
 describe("BlogEngagement — author fallback for a null username", () => {
+    it("renders the current avatar from the author card", () => {
+        h.commentsData = {
+            items: [{
+                id: "c1",
+                postId: "p1",
+                userId: "u2",
+                content: "hello",
+                emojiCount: 0,
+                authorUsername: "minh",
+                author: {
+                    userId: "u2",
+                    username: "minh",
+                    displayName: "Minh",
+                    avatarUrl: "/gamification/avatars/avatar-01-happy.svg",
+                },
+                createdAt: "2026-07-01T00:00:00Z",
+                updatedAt: "2026-07-01T00:00:00Z",
+            }],
+            hasNext: false,
+        }
+
+        render(<BlogEngagement postId="p1" initialEmojiCount={0} />)
+
+        expect(screen.getAllByTestId("user-link")[0].getAttribute("data-avatar"))
+            .toBe("/gamification/avatars/avatar-01-happy.svg")
+    })
+
     it("renders the generic label + seeded avatar instead of crashing", () => {
         h.commentsData = {
             items: [

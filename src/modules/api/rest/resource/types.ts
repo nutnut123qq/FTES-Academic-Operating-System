@@ -141,6 +141,7 @@ export interface RatingResponse {
     review?: string
     createdAt?: string
     updatedAt?: string
+    author?: ResourceAuthorView | null
 }
 
 /** Rating summary for a resource. */

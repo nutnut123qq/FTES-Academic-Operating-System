@@ -53,21 +53,41 @@ beforeEach(() => {
 })
 
 describe("mapCommentToQuestion", () => {
-    it("labels the viewer 'you', others 'member', and anchors the lesson link", () => {
+    it("carries author cards for questions and answers and anchors the lesson link", () => {
         const question = mapCommentToQuestion(
             comment({
+                author: {
+                    userId: "me",
+                    username: "viewer",
+                    displayName: "Người xem",
+                    avatarUrl: "https://cdn/viewer.webp",
+                },
                 replies: [
-                    comment({ id: "r1", userId: "other", content: "Trả lời", parentId: "cm-1" }),
+                    comment({
+                        id: "r1",
+                        userId: "other",
+                        content: "Trả lời",
+                        parentId: "cm-1",
+                        author: {
+                            userId: "other",
+                            username: "author",
+                            displayName: "Tác giả",
+                            avatarUrl: "https://cdn/author.webp",
+                        },
+                    }),
                 ],
             }),
             lesson(1),
             labels,
         )
-        expect(question.authorName).toBe("Bạn")
+        expect(question.authorName).toBe("Người xem")
+        expect(question.authorUsername).toBe("viewer")
+        expect(question.authorAvatar).toBe("https://cdn/viewer.webp")
         expect(question.lessonId).toBe("l1")
         expect(question.lessonHref).toBe("/courses/c/learn/content/modules/m1/contents/l1")
         expect(question.answers).toHaveLength(1)
-        expect(question.answers[0].authorName).toBe("Học viên")
+        expect(question.answers[0].authorName).toBe("Tác giả")
+        expect(question.answers[0].authorAvatar).toBe("https://cdn/author.webp")
     })
 
     it("drops DELETED and anonymous replies from the answers", () => {

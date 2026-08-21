@@ -56,6 +56,7 @@ export const toQuotedPost = (quoted: FeedQuotedPost | null | undefined): QuotedP
     return {
         author: quoted.author?.displayName ?? quoted.author?.username ?? "",
         authorUsername: quoted.author?.username ?? "",
+        authorAvatar: quoted.author?.avatarUrl ?? null,
         title: quoted.title ?? "",
         snippet: splitBodyImages(unwrapAutolinks(quoted.snippet ?? "")).text,
         available: quoted.available,

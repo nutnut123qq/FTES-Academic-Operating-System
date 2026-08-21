@@ -382,6 +382,7 @@ export const SubjectWorkspaceShell = ({
                                                     key={member.id}
                                                     username={member.username}
                                                     displayName={member.name}
+                                                    avatar={member.avatarUrl}
                                                     hideName
                                                     size="sm"
                                                     className={index > 0 ? "-ml-2" : undefined}

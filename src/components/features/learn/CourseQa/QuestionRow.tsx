@@ -33,7 +33,7 @@ export const QuestionRow = ({ question, currentUser, onAnswer }: QuestionRowProp
         <Card>
             <CardContent className="flex flex-col gap-3">
                 <div className="flex items-start gap-3">
-                    <UserAvatar username={question.authorUsername} seed={question.authorUsername} size="sm" className="size-8 shrink-0" />
+                    <UserAvatar username={question.authorUsername} avatar={question.authorAvatar} seed={question.authorUsername} size="sm" className="size-8 shrink-0" />
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                         <div className="flex flex-wrap items-center gap-2">
                             <Typography type="body-sm" weight="medium">{question.authorName}</Typography>
@@ -71,7 +71,7 @@ export const QuestionRow = ({ question, currentUser, onAnswer }: QuestionRowProp
                     <div className="flex flex-col gap-3 border-t border-separator pt-3">
                         {question.answers.map((answer) => (
                             <div key={answer.id} className="flex items-start gap-3">
-                                <UserAvatar username={answer.authorUsername} seed={answer.authorUsername} size="sm" className="size-8 shrink-0" />
+                                <UserAvatar username={answer.authorUsername} avatar={answer.authorAvatar} seed={answer.authorUsername} size="sm" className="size-8 shrink-0" />
                                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <Typography type="body-sm" weight="medium">{answer.authorName}</Typography>

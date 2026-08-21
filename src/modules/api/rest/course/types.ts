@@ -752,6 +752,7 @@ export interface CourseRatingItem {
     review?: string
     createdAt: string
     updatedAt: string
+    author?: LessonCommentAuthorView | null
 }
 
 /** Aggregate + paged reviews for a course (`GET /api/v1/courses/{courseId}/ratings`). */

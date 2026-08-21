@@ -218,7 +218,7 @@ describe("toCommunityPost", () => {
                         id: "b-id",
                         username: "binh",
                         displayName: "Bình",
-                        avatarUrl: null,
+                        avatarUrl: "https://cdn/binh.webp",
                         staffRole: null,
                     },
                     title: "Bài gốc",
@@ -232,6 +232,7 @@ describe("toCommunityPost", () => {
         expect(post.quotedPost).toEqual({
             author: "Bình",
             authorUsername: "binh",
+            authorAvatar: "https://cdn/binh.webp",
             title: "Bài gốc",
             snippet: "nội dung gốc",
             available: true,

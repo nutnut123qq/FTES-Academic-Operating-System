@@ -362,6 +362,9 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
             setOrderId(result.orderId)
             setQrCode(result.qrCode ?? "")
             setPhase("awaiting")
+            // Checkout consumed the cart line server-side — drop the stale cache entry so a later
+            // "buy again" doesn't check out a deleted item id (which 500s / shows "chưa xử lý").
+            void mutate("GET_CART_SWR")
         } catch (error) {
             // Ở LẠI trong modal (không điều hướng đi) và nói rõ CHƯA TRỪ TIỀN: checkout hỏng
             // nghĩa là đơn không được tạo, ví chưa bị chạm.

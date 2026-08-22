@@ -138,9 +138,10 @@ const IMG_THO_HIEN_TRANG: ReadonlyArray<string> = [
     "components/features/profile/ProfileBadges/BadgeCatalogModal/BadgeCatalogRow.tsx",
     "components/features/profile/ProfileProgress/index.tsx",
     "components/features/subject/ExamImageViewer/index.tsx",
+    // Bìa môn: ảnh cover host động (BE/người dùng cấp), không ghim next/image allowlist được.
+    "components/features/subject/SubjectCover/index.tsx",
     "components/features/subject/SubjectFeAlbum/FeAlbumManager.tsx",
     "components/features/subject/SubjectPractice/ExamContribute.tsx",
-    "components/features/subject/SubjectWorkspaceShell/index.tsx",
     "components/layouts/blog/BlogList/FeaturedPost/index.tsx",
     "components/layouts/blog/BlogPost/index.tsx",
     "components/modals/CommunityPhotoLightboxModal/index.tsx",

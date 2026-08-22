@@ -155,7 +155,13 @@ export const SubjectAiTutor = ({
     const disabledModelKeys = catalogModels
         .filter(isModelDown)
         .map((catalogModel) => String(catalogModel.id))
-    const defaultChatModel = modelsSwr.data?.defaults?.chat
+    // Prefer the catalog chat default only when free/unlocked; the ai-service ships a spend-gated
+    // default (gpt-4o-mini) that 403s free users, so fall back to gpt-oss (free) otherwise.
+    const catalogChatDefault = modelsSwr.data?.defaults?.chat
+    const catalogDefaultUsable = catalogModels.some(
+        (m) => String(m.id) === catalogChatDefault && !isModelDown(m) && !(m as { locked?: boolean }).locked,
+    )
+    const defaultChatModel = catalogDefaultUsable ? catalogChatDefault : "openai/gpt-oss-120b"
     /** Model actually sent: the picked one, else the catalog default (when a catalog exists). */
     const activeModel = hasCatalog ? (model ?? defaultChatModel) : undefined
 

@@ -96,7 +96,13 @@ export const ContentAiChat = ({ className, expanded = false }: ContentAiChatProp
     const hasCatalog = !modelsSwr.error && catalogModels.length > 0
     // Down models stay listed (so the user sees why) but can't be picked.
     const disabledModelKeys = catalogModels.filter(isModelDown).map((model) => String(model.id))
-    const defaultChatModel = modelsSwr.data?.defaults?.chat ?? FALLBACK_CHAT_MODEL
+    // Prefer the catalog chat default only when it is free/unlocked. The ai-service catalog ships a
+    // spend-gated default (gpt-4o-mini) that 403s free users, so fall back to gpt-oss (free) otherwise.
+    const catalogChatDefault = modelsSwr.data?.defaults?.chat
+    const catalogDefaultUsable = catalogModels.some(
+        (m) => String(m.id) === catalogChatDefault && !isModelDown(m) && !(m as { locked?: boolean }).locked,
+    )
+    const defaultChatModel = catalogDefaultUsable ? (catalogChatDefault as string) : FALLBACK_CHAT_MODEL
     /** The model to actually send: the picked one, else the catalog default (when a catalog exists). */
     const activeModel = hasCatalog ? (selectedModel ?? defaultChatModel) : undefined
 

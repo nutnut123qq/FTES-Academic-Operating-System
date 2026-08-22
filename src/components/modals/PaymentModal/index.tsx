@@ -187,7 +187,16 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         payInFlightRef.current = false
         idempotencyKeyRef.current = ""
         payIntentRef.current = ""
-    }, [isOpen, amountVnd])
+        // Resume an existing unpaid order (from the "pay invoice" popup): skip checkout, jump
+        // straight to the awaiting-QR step so the buyer just re-scans and the poll settles it.
+        if (context?.resumeOrderId && context?.resumeQrCode) {
+            setStep("payment")
+            setMethod("VIETQR")
+            setOrderId(context.resumeOrderId)
+            setQrCode(context.resumeQrCode)
+            setPhase("awaiting")
+        }
+    }, [isOpen, amountVnd, context?.resumeOrderId, context?.resumeQrCode])
 
     // Ví hết khả năng trả trọn (đổi mã giảm giá làm số tiền vượt số dư, hoặc báo giá vừa
     // về) → rơi về chuyển khoản, không để nút "trả bằng Ví" đứng đó rồi checkout 422.

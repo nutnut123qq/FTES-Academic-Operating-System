@@ -12,8 +12,9 @@
  *
  * Renders nothing when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is unset.
  */
-import React, { useCallback, useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useLocale } from "next-intl"
+import { useTheme } from "next-themes"
 import { publicEnv } from "@/resources/env/public"
 import { loadGoogleIdentityServices } from "@/modules/googleIdentity"
 import { usePostLoginWithGoogleSwr } from "@/hooks/swr/api/rest/mutations/usePostLoginWithGoogleSwr"
@@ -34,10 +35,33 @@ export const GoogleSignInButton = ({
     className,
 }: GoogleSignInButtonProps) => {
     const locale = useLocale()
+    const { resolvedTheme } = useTheme()
     const clientId = publicEnv().google.clientId
+    const wrapperRef = useRef<HTMLDivElement>(null)
     const containerRef = useRef<HTMLDivElement>(null)
     const runRest = useRestWithToast()
     const { trigger } = usePostLoginWithGoogleSwr()
+
+    // GIS renderButton needs a fixed px width. A hard-coded 320 overflowed the xs auth modal
+    // (horizontal scrollbar / cut-off button), so measure the available width and clamp to
+    // GIS's supported range [200, 400]. Re-measures on resize (mobile bottom-sheet ↔ desktop).
+    const [width, setWidth] = useState(0)
+    useEffect(() => {
+        const el = wrapperRef.current
+        if (!el) {
+            return
+        }
+        const measure = () => {
+            const w = el.clientWidth
+            if (w > 0) {
+                setWidth(Math.min(400, Math.max(200, Math.floor(w))))
+            }
+        }
+        measure()
+        const ro = new ResizeObserver(measure)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
 
     // Keep the latest success handler without re-running the GIS init effect on each render.
     const onSuccessRef = useRef(onSuccess)
@@ -57,7 +81,7 @@ export const GoogleSignInButton = ({
     )
 
     useEffect(() => {
-        if (!clientId) {
+        if (!clientId || !width) {
             return
         }
         let cancelled = false
@@ -81,12 +105,14 @@ export const GoogleSignInButton = ({
                 containerRef.current.innerHTML = ""
                 googleId.renderButton(containerRef.current, {
                     type: "standard",
-                    theme: "outline",
+                    // Match the app theme: GIS "outline" is a white/light button (wrong on the
+                    // dark modal); "filled_black" is the dark-mode variant.
+                    theme: resolvedTheme === "dark" ? "filled_black" : "outline",
                     size: "large",
                     text: "continue_with",
                     shape: "pill",
                     logo_alignment: "left",
-                    width: 320,
+                    width,
                     locale,
                 })
             })
@@ -97,18 +123,20 @@ export const GoogleSignInButton = ({
         return () => {
             cancelled = true
         }
-    }, [clientId, locale, handleCredential])
+    }, [clientId, locale, handleCredential, width, resolvedTheme])
 
     if (!clientId) {
         return null
     }
 
     return (
-        <div className={className}>
+        <div className={`w-full max-w-full overflow-hidden ${className ?? ""}`}>
             <div
-                ref={containerRef}
+                ref={wrapperRef}
                 className="flex justify-center"
-            />
+            >
+                <div ref={containerRef} />
+            </div>
         </div>
     )
 }

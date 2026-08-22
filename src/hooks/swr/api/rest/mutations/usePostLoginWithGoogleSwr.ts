@@ -45,6 +45,11 @@ export const usePostLoginWithGoogleSwr = () => {
                 // `me` fetcher once this tab has settled the signed-in SWR key, so the navbar
                 // would keep the signed-out avatar until F5. Hydrate the viewer explicitly.
                 await revalidateViewer()
+                // Belt-and-braces: reload once so every tree (navbar, route guards)
+                // deterministically reflects the signed-in state right after login.
+                if (typeof window !== "undefined") {
+                    window.location.reload()
+                }
             }
             return response
         },

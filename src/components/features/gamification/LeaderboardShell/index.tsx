@@ -1,19 +1,22 @@
 "use client"
 
 import React from "react"
-import { Typography } from "@heroui/react"
+import { Button, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { StarIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
+import { useAppSelector } from "@/redux/hooks"
 import { pathConfig } from "@/resources/path"
 import { formatXpShort } from "@/utils/xp-format"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
 import { AchievementArt } from "../EquippedAchievement"
-import { tierFromXp } from "../leaderboardTiers"
+import { RANK_TIERS, tierFromXp } from "../leaderboardTiers"
 import { useBadgeLabel } from "../useBadgeLabel"
 import { GamificationEventHost } from "../GamificationEventHost"
 import { SeasonBoards } from "../SeasonBoards"
+import { RankTiersModal } from "./RankTiersModal"
 
 /**
  * Gamification leaderboard + progression surface (§11) — the `/leaderboard` page.
@@ -45,9 +48,19 @@ import { SeasonBoards } from "../SeasonBoards"
  */
 export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
-    const { data: my } = useQueryMyGamificationSwr()
+    const { data: my, isLoading, mutate } = useQueryMyGamificationSwr()
+    /**
+     * "Phiên đã ngã ngũ chưa" — cờ do `authReady()` bật (xem `@/modules/auth/auth-ready`).
+     * BẮT BUỘC phải đọc cờ này chứ không suy từ `my == null`: redux KHÔNG persist, nên
+     * `authenticated` là `false` ở MỌI lần tải trang kể cả với người đang đăng nhập, và
+     * suốt hai chặng mạng nối tiếp (`me` → `/profiles/me`) `false` có nghĩa "chưa biết",
+     * không phải "khách".
+     */
+    const sessionSettled = useAppSelector((state) => state.keycloak.initialized)
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const badgeLabel = useBadgeLabel()
     const rankTier = my ? tierFromXp(my.xp) : null
+    const [tiersOpen, setTiersOpen] = React.useState(false)
 
     // Guide is a child route of /leaderboard. pathConfig has no dedicated
     // builder for it (shared file, owned elsewhere); derive it from the
@@ -56,16 +69,50 @@ export const LeaderboardShell = () => {
     // is the locale-aware one from `@/i18n/navigation` and adds the prefix itself.
     const guideHref = `${pathConfig().locale().leaderboard().build()}/guide`
 
+    // CÁI HUY HIỆU LÀ MỘT CÁI NÚT, không phải `div` gắn `onClick`: bấm vào nó mở thang hạng
+    // của cả hệ thống ({@link RankTiersModal}). `<button>` thật để đi được bằng Tab/Enter và
+    // có vòng focus; ảnh vẫn `alt=""`/`aria-hidden` vì tên hành động nằm ở `aria-label` của
+    // nút — để nguyên `alt` sẽ đọc thành hai thứ cho cùng một điểm dừng.
+    const rankBadgeButton = (
+        <button
+            type="button"
+            onClick={() => setTiersOpen(true)}
+            aria-label={t("rankTiers.openAria")}
+            className="shrink-0 rounded-2xl outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-accent"
+        >
+            <img
+                src={(rankTier?.tier ?? RANK_TIERS[0]).badgeSrc}
+                alt=""
+                aria-hidden
+                className={cn("size-16 object-contain", !rankTier && "opacity-60 grayscale")}
+            />
+        </button>
+    )
+
+    /**
+     * Khung của BA trạng thái chưa-có-hạng. Huy hiệu vẫn render ở cả ba (thang hạng là
+     * thông tin công khai, và huy hiệu là lối vào duy nhất người dùng biết để bấm); chỉ
+     * phần chữ đổi theo trạng thái.
+     *
+     * @param body - dòng chữ mô tả đúng trạng thái đang xảy ra.
+     */
+    const rankPlaceholder = (body: React.ReactNode) => (
+        <div className="flex min-w-0 items-center gap-3">
+            {rankBadgeButton}
+            <div className="flex min-w-0 flex-col gap-0.5">
+                <Typography type="body-xs" color="muted">
+                    {t("rankTiers.title")}
+                </Typography>
+                {body}
+            </div>
+        </div>
+    )
+
     const rankSummary = my && rankTier ? (
         <div className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                    <img
-                        src={rankTier.tier.badgeSrc}
-                        alt=""
-                        aria-hidden
-                        className="size-16 shrink-0 object-contain"
-                    />
+                    {rankBadgeButton}
                     <div className="flex min-w-0 flex-col gap-0.5">
                         <Typography type="body-xs" color="muted">
                             {t("currentRank.title")}
@@ -102,11 +149,47 @@ export const LeaderboardShell = () => {
                 </Typography>
             )}
         </div>
-    ) : null
+    ) : !sessionSettled || isLoading ? (
+        // CHƯA BIẾT. Phiên chưa ngã ngũ, hoặc `/me/progression` còn đang bay. Không được
+        // nói gì về hạng — kể cả câu mời đăng nhập, vì ca này gồm CẢ người đang đăng nhập
+        // (mọi lần tải trang đều đi qua đây). Khung xương là câu nói đúng duy nhất.
+        rankPlaceholder(<Skeleton.Typography type="body-sm" className="w-40" />)
+    ) : !authenticated ? (
+        // KHÁCH — đã ngã ngũ và không có ai đăng nhập. Đây là ca DUY NHẤT lời mời đăng
+        // nhập nói đúng sự thật.
+        rankPlaceholder(
+            <Typography type="body-sm" weight="medium">
+                {t("rankTiers.guestHint")}
+            </Typography>,
+        )
+    ) : (
+        // ĐÃ ĐĂNG NHẬP nhưng không đọc được hạng (`/me/progression` lỗi, hoặc trả rỗng).
+        // Trước đây ca này rơi chung vào `rankTiers.guestHint` nên người đang đăng nhập bị
+        // nói là chưa đăng nhập — vĩnh viễn, ngay bên trên bảng theo kỳ vẫn in `#hạng` của
+        // chính họ. Nói đúng chuyện đang xảy ra + cho một lối thử lại.
+        rankPlaceholder(
+            <div className="flex min-w-0 flex-col items-start gap-1">
+                <Typography type="body-sm" weight="medium">
+                    {t("currentRank.unavailable")}
+                </Typography>
+                <Button variant="tertiary" size="sm" onPress={() => void mutate()}>
+                    {t("currentRank.retry")}
+                </Button>
+            </div>,
+        )
+    )
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
             <GamificationEventHost />
+
+            {/* `my?.xp ?? null` — `null` là "chưa biết", KHÁC 0 EXP; thang hạng phân biệt
+                hai thứ đó (xem doc-comment của {@link RankTiersModal}). */}
+            <RankTiersModal
+                isOpen={tiersOpen}
+                onClose={() => setTiersOpen(false)}
+                viewerXp={my?.xp ?? null}
+            />
 
             <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-col gap-0">

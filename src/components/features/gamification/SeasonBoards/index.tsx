@@ -12,7 +12,8 @@ import type { SeasonBoardKey } from "@/modules/api/rest/gamification"
 import { useQuerySeasonBoardSwr } from "../hooks/useQuerySeasonBoardSwr"
 import { SeasonBoardList } from "./SeasonBoardList"
 import { SeasonHeader } from "./SeasonHeader"
-import { SEASON_SCOPES, type SeasonScope } from "./model"
+import { ViewerRankCard } from "./ViewerRankCard"
+import { SEASON_SCOPES, shortUserLabel, type SeasonScope } from "./model"
 import { SeasonPicker } from "./SeasonPicker"
 import { useQuerySeasonOptionsSwr } from "../hooks/useQuerySeasonOptionsSwr"
 import { useBoardFailureContent } from "./useBoardFailureContent"
@@ -22,6 +23,19 @@ const BOARD_ICON: Record<SeasonScope, typeof TrophyIcon> = {
     total: TrophyIcon,
     social: BuildingsIcon,
 }
+
+/**
+ * Số dòng vẽ khi CHƯA mở rộng.
+ *
+ * Trước đợt này tầng vẽ đổ HẾT những gì máy chủ trả (tức 50 dòng) thẳng ra trang — bảng dài
+ * bằng cả màn hình và đẩy mọi thứ dưới nó xuống. Cắt ở tầng VẼ chứ không hạ `limit` xuống 10:
+ * cùng một lần gọi đã trả sẵn phần còn lại, nên biết được là "còn nữa hay hết rồi" mà không
+ * tốn thêm request nào.
+ */
+const COLLAPSED_ROWS = 10
+
+/** Trần CỨNG của backend (`SeasonBoardService.MAX_LIMIT`) — xin hơn cũng chỉ nhận 100. */
+const EXPANDED_LIMIT = 100
 
 /** Khung xương khớp với danh sách thật (bục + vài dòng) nên hộp không nhảy khi có dữ liệu. */
 const BoardSkeleton = () => (
@@ -69,6 +83,10 @@ export const SeasonBoards = ({ rankSummary }: { rankSummary?: React.ReactNode })
     // phải `board`, và chỉ hai giá trị đầu mới ánh xạ sang một lần gọi bảng.
     const [scope, setScope] = useState<SeasonScope>("total")
     const [season, setSeason] = useState<string | null>(null)
+    // "Xem thêm" là một CÔNG TẮC MỘT CHIỀU trong phiên: mở rộng rồi thì đổi tab / đổi kỳ vẫn
+    // giữ top 100. Bắt người dùng bấm lại sau mỗi lần đổi lát cắt là bắt họ nói lại một câu
+    // họ vừa nói xong.
+    const [expanded, setExpanded] = useState(false)
     const { seasons } = useQuerySeasonOptionsSwr()
 
     const board: SeasonBoardKey = scope
@@ -83,11 +101,26 @@ export const SeasonBoards = ({ rankSummary }: { rankSummary?: React.ReactNode })
         lifetime,
         outcome,
         isGuest,
+        viewerUserId,
         isLoading,
         isValidating,
         error,
         mutate,
-    } = useQuerySeasonBoardSwr({ board, season })
+    } = useQuerySeasonBoardSwr({ board, season, limit: expanded ? EXPANDED_LIMIT : undefined })
+
+    // Cắt ở tầng VẼ. `rows.length > COLLAPSED_ROWS` cũng chính là câu trả lời cho "còn ai
+    // nữa không": lần gọi thu gọn đã xin 50 dòng, nên trả về ≤ 10 nghĩa là bảng CHỈ có
+    // ngần ấy người — nút "Xem thêm" không được hiện để rồi bấm xong không đổi gì.
+    const visibleRows = expanded ? rows : rows.slice(0, COLLAPSED_ROWS)
+    const canShowMore = !expanded && rows.length > COLLAPSED_ROWS
+
+    // Khung viền của chính người xem chỉ lấy được khi họ CÓ MẶT trong cửa sổ đang tải —
+    // ngoài đó thì `null` và avatar vẽ trần, đúng luật "khung là trang trí, không chen vào
+    // đường đọc" của {@link AvatarWithFrame}.
+    const viewerRow = rows.find((row) => row.isViewer)
+    const viewerName = viewer?.displayName
+        ?? viewer?.username
+        ?? (viewerUserId ? shortUserLabel(viewerUserId) : "")
 
     const endpoint = `GET /gamification/boards/${board}`
     const boardFailure = failureContent(error, endpoint, () => void mutate())
@@ -165,31 +198,32 @@ export const SeasonBoards = ({ rankSummary }: { rankSummary?: React.ReactNode })
                 {t(`counts.${scope}`)}
             </Typography>
 
-                <div className="flex flex-wrap items-center justify-end gap-3">
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        isPending={isValidating}
-                        onPress={() => {
-                            void mutate()
-                        }}
-                    >
-                        {t("refresh")}
-                    </Button>
-                </div>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+                <Button
+                    size="sm"
+                    variant="ghost"
+                    isPending={isValidating}
+                    onPress={() => {
+                        void mutate()
+                    }}
+                >
+                    {t("refresh")}
+                </Button>
+            </div>
 
-                {isGuest ? (
-                    // Endpoint đòi đăng nhập. Đây KHÔNG phải lỗi và cũng KHÔNG phải bảng
-                    // rỗng — nói đúng việc phải làm thay vì hiện một khối 401.
-                    <Typography type="body-sm" color="muted">
-                        {t("guest")}
-                    </Typography>
-                ) : outcome === "NO_SEASON" ? (
-                    // Cờ NO_SEASON: KHÔNG có kỳ nào đang chạy. Câu này phải khác hẳn câu
-                    // "chưa ai lên bảng" ở nhánh rỗng bên dưới — SeasonHeader đã nói rõ,
-                    // nên chỗ này im lặng chứ không vẽ thêm một màn rỗng nói sai.
-                    null
-                ) : (
+            {isGuest ? (
+            // Endpoint đòi đăng nhập. Đây KHÔNG phải lỗi và cũng KHÔNG phải bảng
+            // rỗng — nói đúng việc phải làm thay vì hiện một khối 401.
+                <Typography type="body-sm" color="muted">
+                    {t("guest")}
+                </Typography>
+            ) : outcome === "NO_SEASON" ? (
+            // Cờ NO_SEASON: KHÔNG có kỳ nào đang chạy. Câu này phải khác hẳn câu
+            // "chưa ai lên bảng" ở nhánh rỗng bên dưới — SeasonHeader đã nói rõ,
+            // nên chỗ này im lặng chứ không vẽ thêm một màn rỗng nói sai.
+                null
+            ) : (
+                <>
                     <AsyncContent
                         isLoading={isLoading && rows.length === 0}
                         skeleton={<BoardSkeleton />}
@@ -201,12 +235,42 @@ export const SeasonBoards = ({ rankSummary }: { rankSummary?: React.ReactNode })
                         errorContent={boardFailure ?? undefined}
                     >
                         <SeasonBoardList
-                            rows={rows}
+                            rows={visibleRows}
                             viewerName={viewer?.displayName ?? viewer?.username ?? null}
                             viewerAvatar={viewer?.avatar ?? null}
                         />
                     </AsyncContent>
-                )}
+
+                    {/* Thẻ hồ sơ + nút mở rộng đi CHUNG một dải ghim: cuộn giữa top 100
+                        vẫn thấy mình đang ở đâu và vẫn với tới nút. Chỉ dựng khi bảng
+                        THẬT SỰ có dữ liệu — trên bảng rỗng/lỗi thì "hạng của bạn" là câu
+                        trả lời cho một câu hỏi chưa hỏi được. */}
+                    {outcome === "OK" ? (
+                        <div className="sticky bottom-0 z-10 flex flex-col gap-2 bg-background/95 pb-2 pt-3 backdrop-blur">
+                            <ViewerRankCard
+                                name={viewerName}
+                                avatar={viewer?.avatar ?? null}
+                                seed={viewerUserId ?? ""}
+                                frameCode={viewerRow?.avatarFrame ?? null}
+                                rank={myRank}
+                                xp={myXp}
+                            />
+                            {canShowMore ? (
+                                // KHÔNG `isPending={isValidating}` ở đây: `setExpanded(true)`
+                                // làm `canShowMore` thành false ngay trong cùng lần render, nên
+                                // nút bị gỡ khỏi cây trước khi `isValidating` kịp bật — trạng
+                                // thái pending của nó không bao giờ vẽ được. Ngược lại, `isValidating`
+                                // dùng CHUNG với nút "Làm mới", nên bấm Làm mới lại làm nút này
+                                // quay spinner như thể nó đang nạp thêm dòng. Một prop chỉ sáng
+                                // lúc sai còn tệ hơn không có.
+                                <Button variant="ghost" onPress={() => setExpanded(true)}>
+                                    {t("showMore", { limit: EXPANDED_LIMIT })}
+                                </Button>
+                            ) : null}
+                        </div>
+                    ) : null}
+                </>
+            )}
         </section>
     )
 }

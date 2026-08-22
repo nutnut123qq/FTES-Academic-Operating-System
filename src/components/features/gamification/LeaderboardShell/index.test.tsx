@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { MyGamification } from "../hooks/useQueryMyGamificationSwr"
 
@@ -21,14 +21,35 @@ import type { MyGamification } from "../hooks/useQueryMyGamificationSwr"
  * profile badge catalog uses — so the two surfaces cannot disagree.
  */
 
+// Values are echoed into the key so two rows of the rank ladder (same key,
+// different tier) stay distinguishable — a bare key would make every locked row
+// carry the identical label.
 vi.mock("next-intl", () => ({
-    useTranslations: () => (key: string) => key,
+    useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+        values
+            ? `${key}(${Object.entries(values).map(([name, value]) => `${name}=${value}`).join(",")})`
+            : key,
 }))
 
-vi.mock("@heroui/react", () => ({
-    Typography: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
-    cn: (...classes: Array<string | undefined>) => classes.filter(Boolean).join(" "),
-}))
+vi.mock("@heroui/react", () => {
+    const Pass = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    // Closed modal renders NOTHING — the img/glyph counts asserted by the badge
+    // cases below depend on the ladder staying out of the tree until opened.
+    const Modal = Object.assign(
+        ({ isOpen, children }: { isOpen?: boolean; children?: React.ReactNode }) =>
+            isOpen ? <div>{children}</div> : null,
+        { Backdrop: Pass, Container: Pass, Dialog: Pass, Header: Pass, Body: Pass, Footer: Pass },
+    )
+    return {
+        Typography: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+        cn: (...classes: Array<string | undefined | false>) => classes.filter(Boolean).join(" "),
+        Modal,
+        Button: ({ children, onPress }: { children?: React.ReactNode; onPress?: () => void }) => (
+            <button type="button" onClick={onPress}>{children}</button>
+        ),
+        Chip: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+    }
+})
 
 // MedalIcon / TrophyIcon are what the SHARED helper resolves to — kept
 // distinguishable so a test can prove WHICH fallback was picked.
@@ -37,6 +58,7 @@ vi.mock("@phosphor-icons/react", () => ({
     StarIcon: () => <svg />,
     MedalIcon: () => <svg data-testid="glyph-medal" />,
     TrophyIcon: () => <svg data-testid="glyph-trophy" />,
+    LockSimpleIcon: () => <svg data-testid="glyph-lock" />,
 }))
 
 vi.mock("@/i18n/navigation", () => ({
@@ -72,8 +94,29 @@ vi.mock("../useBadgeLabel", () => ({
 }))
 
 let snapshot: MyGamification | undefined
+let snapshotLoading = false
+const revalidate = vi.fn()
 vi.mock("../hooks/useQueryMyGamificationSwr", () => ({
-    useQueryMyGamificationSwr: () => ({ data: snapshot, isLoading: false, error: undefined }),
+    useQueryMyGamificationSwr: () => ({
+        data: snapshot,
+        isLoading: snapshotLoading,
+        error: undefined,
+        mutate: revalidate,
+    }),
+}))
+
+// Phiên đăng nhập là BA trạng thái, không hai — xem khối "rank summary" cuối file.
+let sessionSettled = true
+let sessionAuthenticated = true
+vi.mock("@/redux/hooks", () => ({
+    useAppSelector: (select: (state: unknown) => unknown) =>
+        select({
+            keycloak: { initialized: sessionSettled, authenticated: sessionAuthenticated },
+        }),
+}))
+
+vi.mock("@/components/blocks/skeleton/Skeleton", () => ({
+    Skeleton: { Typography: () => <div data-testid="rank-skeleton" /> },
 }))
 
 const { LeaderboardShell } = await import("./index")
@@ -90,6 +133,10 @@ const withBadges = (badges: MyGamification["badges"]): MyGamification => ({
 
 beforeEach(() => {
     snapshot = undefined
+    snapshotLoading = false
+    sessionSettled = true
+    sessionAuthenticated = true
+    revalidate.mockClear()
 })
 
 describe("LeaderboardShell — badge strip draws the real art", () => {
@@ -207,5 +254,116 @@ describe("LeaderboardShell — badge strip draws the real art", () => {
         expect(screen.queryByTestId("glyph-medal")).toBeNull()
         expect(document.querySelectorAll("img")).toHaveLength(1)
         expect(document.querySelector("img[src='']")).toBeNull()
+    })
+})
+
+/**
+ * The RANK LADDER opened by clicking the rank badge.
+ *
+ * The branch worth pinning is the one that can lie: which tiers get a padlock.
+ * "Locked" must mean "we KNOW the viewer is short of the threshold" — a viewer
+ * with no snapshot at all (guest, or `/me/*` still in flight) must see the ladder
+ * unlocked and unmarked, because padlocking all five reads as "sign in to view
+ * the rank ladder", which is not true.
+ */
+describe("LeaderboardShell — rank ladder popup", () => {
+    it("opens from the rank badge and padlocks only the tiers above the viewer's XP", () => {
+        // 1 500 XP ⇒ Bronze; Silver upward are out of reach.
+        snapshot = withBadges([])
+
+        render(<LeaderboardShell />)
+        expect(screen.queryByTestId("glyph-lock")).toBeNull()
+
+        fireEvent.click(screen.getByLabelText("rankTiers.openAria"))
+
+        // All five tiers, ascending, each named once inside the ladder.
+        expect(screen.getByText("rankTiers.currentAria(tier=tiers.bronze)")).toBeTruthy()
+        expect(screen.getByText("rankTiers.lockedAria(tier=tiers.silver,xp=25k)")).toBeTruthy()
+        expect(screen.getByText("rankTiers.lockedAria(tier=tiers.gold,xp=75k)")).toBeTruthy()
+        expect(screen.getByText("rankTiers.lockedAria(tier=tiers.platinum,xp=125k)")).toBeTruthy()
+        expect(screen.getByText("rankTiers.lockedAria(tier=tiers.diamond,xp=200k)")).toBeTruthy()
+
+        // Four padlocks + four greyed arts, and the current tier carries the chip.
+        expect(screen.getAllByTestId("glyph-lock")).toHaveLength(4)
+        expect(document.querySelectorAll("img.grayscale")).toHaveLength(4)
+        expect(screen.getByText("rankTiers.current")).toBeTruthy()
+    })
+
+    it("shows every tier UNLOCKED when the viewer's XP is unknown (guest / snapshot pending)", () => {
+        snapshot = undefined
+
+        render(<LeaderboardShell />)
+
+        // The entry point survives without a snapshot — the ladder is public.
+        fireEvent.click(screen.getByLabelText("rankTiers.openAria"))
+
+        expect(screen.queryAllByTestId("glyph-lock")).toHaveLength(0)
+        expect(screen.getByText("rankTiers.unlockedAria(tier=tiers.bronze)")).toBeTruthy()
+        expect(screen.getByText("rankTiers.unlockedAria(tier=tiers.diamond)")).toBeTruthy()
+        // …and nothing is claimed to be the viewer's current tier.
+        expect(screen.queryByText("rankTiers.current")).toBeNull()
+        expect(screen.queryByText(/^rankTiers\.currentAria/)).toBeNull()
+    })
+})
+
+/**
+ * KHỐI "HẠNG HIỆN TẠI" — ba trạng thái KHÔNG được gộp.
+ *
+ * Lỗi đã vá: nhánh dự phòng chỉ hỏi `my && rankTier`, mà `my` là `undefined` cho cả ba ca
+ * (khách · phiên chưa ngã ngũ · `/me/progression` lỗi), nên NGƯỜI ĐANG ĐĂNG NHẬP bị đọc câu
+ * "Đăng nhập để biết bạn đang ở hạng nào" — vĩnh viễn ở ca lỗi, và mỗi lần tải trang ở ca
+ * hydrate, ngay bên trên bảng theo kỳ vẫn in `#hạng` của chính họ.
+ */
+describe("LeaderboardShell — rank summary tells the three session states apart", () => {
+    it("says NOTHING about rank while the session has not settled (a signed-in user is here too)", () => {
+        snapshot = undefined
+        sessionSettled = false
+        // Chính là ca bẫy: redux không persist nên `authenticated` là false ở MỌI lần tải
+        // trang, kể cả với người đang đăng nhập.
+        sessionAuthenticated = false
+
+        render(<LeaderboardShell />)
+
+        expect(screen.getByTestId("rank-skeleton")).toBeTruthy()
+        expect(screen.queryByText("rankTiers.guestHint")).toBeNull()
+        // Lối vào thang hạng vẫn còn — thang hạng là thông tin công khai.
+        expect(screen.getByLabelText("rankTiers.openAria")).toBeTruthy()
+    })
+
+    it("says nothing about rank while /me/progression is still in flight", () => {
+        snapshot = undefined
+        snapshotLoading = true
+
+        render(<LeaderboardShell />)
+
+        expect(screen.getByTestId("rank-skeleton")).toBeTruthy()
+        expect(screen.queryByText("rankTiers.guestHint")).toBeNull()
+    })
+
+    it("invites a GUEST to sign in — the one case that sentence is true", () => {
+        snapshot = undefined
+        sessionSettled = true
+        sessionAuthenticated = false
+
+        render(<LeaderboardShell />)
+
+        expect(screen.getByText("rankTiers.guestHint")).toBeTruthy()
+        expect(screen.queryByTestId("rank-skeleton")).toBeNull()
+        expect(screen.queryByText("currentRank.unavailable")).toBeNull()
+    })
+
+    it("tells a SIGNED-IN viewer the rank could not be read, and offers a retry", () => {
+        snapshot = undefined
+        sessionSettled = true
+        sessionAuthenticated = true
+
+        render(<LeaderboardShell />)
+
+        expect(screen.getByText("currentRank.unavailable")).toBeTruthy()
+        // Không bao giờ được mời một người đang đăng nhập đi đăng nhập.
+        expect(screen.queryByText("rankTiers.guestHint")).toBeNull()
+
+        fireEvent.click(screen.getByText("currentRank.retry"))
+        expect(revalidate).toHaveBeenCalledTimes(1)
     })
 })

@@ -29,7 +29,7 @@ import {
     useContentAiSelectedModel,
     useContentAiSelection,
 } from "@/hooks/zustand/overlay/hooks"
-import { createSession, isFreeModel, isModelDown, sendSessionMessageStream } from "@/modules/api/rest/ai"
+import { createSession, isFreeModel, isModelDown, isModelLocked, sendSessionMessageStream } from "@/modules/api/rest/ai"
 
 /** BE default chat model when the catalog omits `defaults.chat`. */
 const FALLBACK_CHAT_MODEL = "openai/gpt-oss-120b"
@@ -95,8 +95,17 @@ export const ContentAiChat = ({ className, expanded = false }: ContentAiChatProp
     const catalogModels = modelsSwr.data?.models ?? []
     const hasCatalog = !modelsSwr.error && catalogModels.length > 0
     // Down models stay listed (so the user sees why) but can't be picked.
-    const disabledModelKeys = catalogModels.filter(isModelDown).map((model) => String(model.id))
-    const defaultChatModel = modelsSwr.data?.defaults?.chat ?? FALLBACK_CHAT_MODEL
+    // Disable both down models AND spend-gated (locked) models so a free user can't pick one and 403.
+    const disabledModelKeys = catalogModels
+        .filter((model) => isModelDown(model) || isModelLocked(model))
+        .map((model) => String(model.id))
+    // Prefer the catalog chat default only when it is free/unlocked. The ai-service catalog ships a
+    // spend-gated default (gpt-4o-mini) that 403s free users, so fall back to gpt-oss (free) otherwise.
+    const catalogChatDefault = modelsSwr.data?.defaults?.chat
+    const catalogDefaultUsable = catalogModels.some(
+        (m) => String(m.id) === catalogChatDefault && !isModelDown(m) && !(m as { locked?: boolean }).locked,
+    )
+    const defaultChatModel = catalogDefaultUsable ? (catalogChatDefault as string) : FALLBACK_CHAT_MODEL
     /** The model to actually send: the picked one, else the catalog default (when a catalog exists). */
     const activeModel = hasCatalog ? (selectedModel ?? defaultChatModel) : undefined
 
@@ -405,6 +414,10 @@ export const ContentAiChat = ({ className, expanded = false }: ContentAiChatProp
                                                     {isModelDown(catalogModel) ? (
                                                         <Typography type="body-xs" color="muted">
                                                             {t("codeGrading.unavailableTag")}
+                                                        </Typography>
+                                                    ) : isModelLocked(catalogModel) ? (
+                                                        <Typography type="body-xs" color="muted">
+                                                            🔒
                                                         </Typography>
                                                     ) : isFreeModel(catalogModel) ? (
                                                         <Typography type="body-xs" color="muted">

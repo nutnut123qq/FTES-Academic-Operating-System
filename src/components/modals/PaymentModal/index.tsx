@@ -187,7 +187,16 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         payInFlightRef.current = false
         idempotencyKeyRef.current = ""
         payIntentRef.current = ""
-    }, [isOpen, amountVnd])
+        // Resume an existing unpaid order (from the "pay invoice" popup): skip checkout, jump
+        // straight to the awaiting-QR step so the buyer just re-scans and the poll settles it.
+        if (context?.resumeOrderId && context?.resumeQrCode) {
+            setStep("payment")
+            setMethod("VIETQR")
+            setOrderId(context.resumeOrderId)
+            setQrCode(context.resumeQrCode)
+            setPhase("awaiting")
+        }
+    }, [isOpen, amountVnd, context?.resumeOrderId, context?.resumeQrCode])
 
     // Ví hết khả năng trả trọn (đổi mã giảm giá làm số tiền vượt số dư, hoặc báo giá vừa
     // về) → rơi về chuyển khoản, không để nút "trả bằng Ví" đứng đó rồi checkout 422.
@@ -353,6 +362,9 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
             setOrderId(result.orderId)
             setQrCode(result.qrCode ?? "")
             setPhase("awaiting")
+            // Checkout consumed the cart line server-side — drop the stale cache entry so a later
+            // "buy again" doesn't check out a deleted item id (which 500s / shows "chưa xử lý").
+            void mutate("GET_CART_SWR")
         } catch (error) {
             // Ở LẠI trong modal (không điều hướng đi) và nói rõ CHƯA TRỪ TIỀN: checkout hỏng
             // nghĩa là đơn không được tạo, ví chưa bị chạm.
@@ -371,7 +383,17 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         }
     }
 
-    const close = () => setOpen(false)
+    // Closing the modal AFTER a settled payment → reload the page so the course CTA flips from
+    // "buy" to "continue learning" and the just-granted enrollment shows (the reactive revalidate
+    // via onSuccess doesn't always reach every gated surface). Only on success; a plain close/cancel
+    // never reloads.
+    const handleOpenChange = (open: boolean) => {
+        setOpen(open)
+        if (!open && phase === "success" && typeof window !== "undefined") {
+            window.location.reload()
+        }
+    }
+    const close = () => handleOpenChange(false)
 
     // The payable amount shown per the ACTIVE method (VND or Xu) — reused by the Summary
     // step's total line and the Payment step's slim recap.
@@ -382,7 +404,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
             : t("checkout.amountCoin", { amount: format.number(shown.value) })
 
     return (
-        <Modal isOpen={isOpen} onOpenChange={setOpen}>
+        <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
             <Modal.Backdrop>
                 <Modal.Container>
                     {/* `max-h-full` là CÁI CHỐT của lỗi "giỏ dài không bấm được thanh toán":

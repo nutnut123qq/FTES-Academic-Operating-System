@@ -52,6 +52,11 @@ export const usePostKeycloakLoginSwr = () => {
                 // identity to render without a reload. Awaited: `trigger()` resolves only
                 // once the signed-in UI can actually paint.
                 await revalidateViewer()
+                // Belt-and-braces: reload once so every tree (navbar, route guards)
+                // deterministically reflects the signed-in state right after login.
+                if (typeof window !== "undefined") {
+                    window.location.reload()
+                }
             }
             return response
         }

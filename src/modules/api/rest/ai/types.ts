@@ -137,6 +137,10 @@ export interface AiCatalogModel {
     free?: boolean
     /** Coarse per-model health: "available" | "degraded" | "down". Optional. */
     status?: string
+    /** Spend threshold (VND) to unlock this model; 0/absent → not spend-gated. Added by the BE. */
+    minSpendVnd?: number
+    /** BE per-user gate flag (gated AND not unlocked). Unreliable in some builds → also gate on minSpendVnd. */
+    locked?: boolean
 }
 
 /**

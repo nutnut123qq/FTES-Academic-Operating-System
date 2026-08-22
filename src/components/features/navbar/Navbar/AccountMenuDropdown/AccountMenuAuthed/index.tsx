@@ -19,8 +19,9 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 import { useHasPermission } from "@/hooks/useHasPermission"
-import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useAccountMenuOverlayState, usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useGetMyWalletSwr } from "@/hooks/swr/api/rest/queries/useGetMyWalletSwr"
+import { useGetPendingOrdersSwr } from "@/hooks/swr/api/rest/queries/useGetPendingOrdersSwr"
 import { useMutateSignOutSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignOutSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
@@ -86,6 +87,25 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
     // Lecturer-only "Khoá tôi dạy" entry — same gate as the interview manage panel
     // (`ai.teacher.use`); a non-lecturer never sees the teaching link.
     const isLecturer = useHasPermission("ai.teacher.use")
+    // Pending (unpaid) invoices — the "pay invoice" section only renders when there is at least
+    // one, so a user who reloaded away from the QR can resume it (max 5 from the endpoint).
+    const pendingOrders = useGetPendingOrdersSwr().data ?? []
+    const paymentOverlay = usePaymentOverlayState()
+
+    /** Close the menu, then re-open the payment modal on the existing order's QR (resume). */
+    const payInvoice = useCallback(
+        (orderId: string, qrCode: string, amountVnd: number, label: string) => {
+            close()
+            paymentOverlay.open({
+                itemIds: [],
+                title: label,
+                amountVnd,
+                resumeOrderId: orderId,
+                resumeQrCode: qrCode,
+            })
+        },
+        [close, paymentOverlay],
+    )
 
     /** Close the menu, then navigate. */
     const go = useCallback(
@@ -210,6 +230,31 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     </span>
                 </Dropdown.Item>
             </Dropdown.Section>
+            {/* Hóa đơn chờ thanh toán — chỉ hiện khi có đơn chưa trả; mở lại QR để thanh toán tiếp
+                (đơn mất QR do reload vẫn trả được). Tối đa 5 đơn từ endpoint. */}
+            {pendingOrders.filter((o) => o.qrCode).length > 0 ? (
+                <Dropdown.Section>
+                    {pendingOrders
+                        .filter((o) => o.qrCode)
+                        .map((o) => (
+                            <Dropdown.Item
+                                key={o.orderId}
+                                id={`invoice-${o.orderId}`}
+                                textValue="Thanh toán hóa đơn"
+                                onPress={() =>
+                                    payInvoice(o.orderId, o.qrCode ?? "", o.totalPrice ?? 0,
+                                        "Hóa đơn chờ thanh toán")
+                                }
+                            >
+                                <WalletIcon className="size-5" />
+                                <Label>Thanh toán hóa đơn</Label>
+                                <span className="ml-auto text-sm font-medium text-foreground">
+                                    {(o.totalPrice ?? 0).toLocaleString()}đ
+                                </span>
+                            </Dropdown.Item>
+                        ))}
+                </Dropdown.Section>
+            ) : null}
             <Dropdown.Section>
                 <Dropdown.Item
                     id="logout"

@@ -292,6 +292,26 @@ html {
 }
 
 /*
+ * Avatar image — CẮT (`cover`), không BÓP (`fill`).
+ *
+ * HeroUI khai `.avatar__image { @apply absolute inset-0 aspect-square size-full }` mà
+ * KHÔNG khai `object-fit`, nên `<img>` giữ mặc định `object-fit: fill` = kéo ảnh cho
+ * đầy hộp. Hộp avatar luôn VUÔNG (size-8/10/12) còn ảnh người dùng tự tải lên thì tỉ lệ
+ * nào cũng có — FE không crop (form chỉ validate type/size rồi upload nguyên file) và BE
+ * cũng không (không truyền `namedTransform` nào cho Cloudinary). Kết quả trước khi có
+ * dòng này: một ảnh chân dung 1200×800 bị bóp ngang ~33% ở navbar, feed, bình luận và
+ * bảng xếp hạng. Art album và DiceBear vốn vuông 512×512 nên KHÔNG lộ lỗi — đó là lý do
+ * nó trốn được suốt hai đợt soi trước, cả hai đợt chỉ nhìn art nhà.
+ *
+ * Sửa ở CSS token chứ không thêm class vào `UserAvatar`, cùng lý do đã ghi cho khối
+ * radius ngay trên: `<Avatar>` được dựng trực tiếp ở ~60 file, sót một chỗ là không có
+ * gì báo đỏ. Khối này un-layered nên vẫn thắng `layer(components)` của HeroUI.
+ */
+.avatar__image {
+    object-fit: cover;
+}
+
+/*
  * Switch — fully round pill with a circular thumb, sized to match the navbar
  * icon buttons / notification bell (36px tall). Track 4rem × 2.25rem, thumb
  * 1.75rem circle with a 0.25rem inset; the checked margin slides it flush right.

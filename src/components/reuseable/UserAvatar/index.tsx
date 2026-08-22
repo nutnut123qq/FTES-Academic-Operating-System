@@ -4,7 +4,7 @@ import React from "react"
 import { Avatar, AvatarFallback, AvatarImage, cn } from "@heroui/react"
 import { UserIcon } from "@phosphor-icons/react"
 import { avatarInitials, resolveAvatarSrc } from "@/utils/avatar"
-import { profileAssetThumbnailUrl } from "@/utils/profileAsset"
+import { profileAssetThumbnailUrl, roundProfileArtUrl } from "@/utils/profileAsset"
 import { useAvatarFrames } from "@/components/features/gamification/useAvatarFrames"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
@@ -59,7 +59,12 @@ export interface UserAvatarProps extends WithClassNames<undefined> {
  * @param props - {@link UserAvatarProps}
  */
 export const UserAvatar = ({ username, avatar, seed, size, className, frameCode }: UserAvatarProps) => {
-    const src = profileAssetThumbnailUrl(resolveAvatarSrc(avatar, seed ?? username))
+    // `roundProfileArtUrl` đứng TRƯỚC bước thumbnail: album mặc định còn trỏ vào 9 file
+    // `avatar-NN-*.svg` vuông bo góc cho tới khi migration V375 chạy, và cắt tròn một ô
+    // vuông bo góc KHÔNG ra hình tròn — 4 góc art bo vào sâu hơn đường cắt nên lộ 4 múi
+    // `bg-default`, đúng hình vuông chủ dự án chụp ở navbar. Ảnh tự tải lên / DiceBear
+    // không khớp mẫu nên đi thẳng.
+    const src = profileAssetThumbnailUrl(roundProfileArtUrl(resolveAvatarSrc(avatar, seed ?? username)))
     const initials = avatarInitials(username)
 
     const avatarNode = (
@@ -89,6 +94,18 @@ export const UserAvatar = ({ username, avatar, seed, size, className, frameCode 
  * Khung có ảnh (`assetUrl`) đè lên trên — ép kích thước tường minh (`w-[132%]` + vuông + căn
  * giữa) vì ảnh khung 512×512 sẽ tràn nếu giữ kích thước gốc; chỉ có `cssGradient` thì vẽ vòng.
  * Mã lạ / danh mục chưa tải ⇒ trả avatar trần (không bọc gì).
+ *
+ * <p><b>`w-[132%]` là một HỢP ĐỒNG với art, không phải số chỉnh cho vừa mắt.</b> 132% đặt mép
+ * avatar đúng ở bán kính 193,9 trong hộp art 512 (256 ÷ 1,32); art khung phải vẽ mép trong của
+ * vòng ở r=191 để vòng tụt xuống dưới mép avatar 3 đơn vị. Vẽ hở hơn thì lộ một vành nền giữa
+ * avatar và khung — đó chính là lỗi "khung không ôm avatar": bộ art chủ dự án vẽ có cỡ hở lệch
+ * nhau theo hạng (191 → 218) nên bronze/silver hở rõ. Sửa ở ART (đã thu `<image>` trong 5 file
+ * `frame-*-round.svg` cho mép trong về đúng 191), KHÔNG rắc mỗi hạng một tỉ lệ vào đây: một số
+ * cho cả bộ thì mọi bề mặt — feed, bảng xếp hạng, navbar, màn chọn khung — cùng đúng một lần.
+ *
+ * <p>Đường dẫn art đi qua {@link roundProfileArtUrl} TRƯỚC khi lấy thumbnail: danh mục còn trỏ
+ * vào bộ khung vuông cũ cho tới khi migration V375 chạy, và khung vuông quanh avatar tròn chính
+ * là ảnh chủ dự án báo lỗi. Cả `src` lẫn nhánh dự phòng đều dùng đường đã đổi.
  */
 const FramedAvatar = ({ frameCode, children }: { frameCode: string; children: React.ReactNode }) => {
     const lookupFrame = useAvatarFrames()
@@ -96,6 +113,7 @@ const FramedAvatar = ({ frameCode, children }: { frameCode: string; children: Re
     if (!frame) {
         return <>{children}</>
     }
+    const frameArtUrl = roundProfileArtUrl(frame.assetUrl)
     return (
         <span className="relative inline-flex shrink-0">
             {frame.cssGradient ? (
@@ -106,9 +124,9 @@ const FramedAvatar = ({ frameCode, children }: { frameCode: string; children: Re
                 />
             ) : null}
             <span className="relative inline-flex">{children}</span>
-            {frame.assetUrl ? (
+            {frameArtUrl ? (
                 <img
-                    src={profileAssetThumbnailUrl(frame.assetUrl) ?? frame.assetUrl}
+                    src={profileAssetThumbnailUrl(frameArtUrl) ?? frameArtUrl}
                     alt=""
                     aria-hidden
                     loading="lazy"

@@ -245,12 +245,35 @@ describe("ExamList — modal đề", () => {
         expect(screen.getByText("expand")).toBeTruthy()
     })
 
-    it("bật toàn màn hình → dialog bỏ hộp 95vw/6xl/90vh, lấy trọn khung nhìn", () => {
+    /**
+     * Hộp NEO của popup đề: gần trọn bề ngang, chiều cao ghim.
+     *
+     * `max-w-6xl` (72rem) là thứ vừa bị bỏ — chính nó bó popup lại còn khúc giữa màn hình
+     * và bỏ trắng hai bên trên màn 1080p trở lên. Ghim lại ở đây vì đó là một QUYẾT ĐỊNH
+     * (chủ dự án chốt "cho nó to tràn ra cả 2 bên"), không phải chuyện thẩm mỹ vặt, và vì
+     * `h-[92vh]` là cái mà khung ảnh trong album `flex-1` vào — mất nó là ảnh đề rơi lại
+     * sàn `60dvh`. Cùng con số với popup đề PE của `SubjectWorkspaceRail`.
+     */
+    it("hộp neo bỏ trần 6xl, lấy gần trọn bề ngang + chiều cao ghim", () => {
         openFirstRow()
 
         const dialog = () => screen.getByTestId("modal-dialog")
-        expect(dialog().className).toContain("max-w-6xl")
-        expect(dialog().className).toContain("h-[90vh]")
+        expect(dialog().className).not.toContain("max-w-6xl")
+        expect(dialog().className).toContain("sm:w-[96vw]")
+        expect(dialog().className).toContain("h-[92vh]")
+        // ★ Trần mặc định phải bị GỠ TƯỜNG MINH. `Modal.Container` không truyền `size` ⇒
+        // HeroUI lấy `defaultVariants.size = "md"` ⇒ dialog mang `modal__dialog--md`, mà
+        // `modal.css` bake `.modal__dialog--md { max-width: 28rem }` trong `@layer components`.
+        // Bỏ `max-w-6xl` mà không thay bằng `max-w-none` là popup HẸP LẠI còn 448px — làm
+        // NGƯỢC đúng cái quyết định ở trên, và chuỗi class là mắt xích duy nhất test JSDOM
+        // chạm tới được.
+        expect(dialog().className).toContain("max-w-none")
+    })
+
+    it("bật toàn màn hình → dialog bỏ hộp neo, lấy trọn khung nhìn", () => {
+        openFirstRow()
+
+        const dialog = () => screen.getByTestId("modal-dialog")
 
         fireEvent.click(screen.getByText("expand"))
 

@@ -23,7 +23,10 @@
                 "title": "Which major are you in?",
                 "body": "Pick a major so your workspace shows only your subjects. You can change it any time in your profile.",
                 "dismiss": "Later",
-                "error": "Could not save your choice. Please try again."
+                "error": "Could not save your choice. Please try again.",
+                "specializationTitle": "Which specialization?",
+                "specializationBody": "Pick your specialization inside {major}.",
+                "noSpecialization": "{major} has no specializations yet — we'll save the field itself."
             }
         },
         "assistant": {
@@ -4105,7 +4108,9 @@
             "totalXp": "{xp} XP",
             "toNext": "{xp} XP to reach {tier}",
             "progressAria": "Progress toward {tier}",
-            "topTier": "You have reached the highest tier."
+            "topTier": "You have reached the highest tier.",
+            "unavailable": "We could not read your rank just now.",
+            "retry": "Try again"
         },
         "tiers": {
             "bronze": "Bronze",
@@ -4113,6 +4118,18 @@
             "gold": "Gold",
             "platinum": "Platinum",
             "diamond": "Diamond"
+        },
+        "rankTiers": {
+            "title": "Rank ladder",
+            "subtitle": "Every rank in the system, ordered by total XP.",
+            "openAria": "See every rank in the system",
+            "threshold": "From {xp} XP",
+            "current": "Current rank",
+            "currentAria": "{tier} — your current rank",
+            "unlockedAria": "{tier} — unlocked",
+            "lockedAria": "{tier} — locked, needs {xp} XP",
+            "guestHint": "Sign in to see which rank you are on.",
+            "close": "Close"
         },
         "moment": {
             "levelUpTitle": "Level up!",
@@ -4274,6 +4291,7 @@
             "you": "You",
             "myRank": "Your rank this term: {rank}",
             "myRankUnranked": "You are not ranked this term yet.",
+            "showMore": "Show more — top {limit}",
             "refresh": "Refresh",
             "guest": "Sign in to see the season leaderboards.",
             "empty": "Nobody is on this board yet this term.",
@@ -5750,6 +5768,7 @@
             "searchPlaceholder": "Search subjects",
             "all": "All",
             "allMajors": "All majors",
+            "allInMajor": "All of {major}",
             "empty": "No subjects match your search.",
             "emptyMajor": "This major has no subjects yet."
         },

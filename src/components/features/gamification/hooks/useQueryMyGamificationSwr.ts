@@ -142,5 +142,11 @@ export const useQueryMyGamificationSwr = () => {
         // flight with nothing to show; guests never load.
         isLoading: authenticated ? progressionSwr.isLoading && !progression : false,
         error: authenticated ? progressionSwr.error : undefined,
+        /**
+         * Nạp lại lát CHÍNH (progression). Có để bề mặt nào phân biệt được "lỗi đọc hạng"
+         * với "khách" thì còn có lối cho người dùng thử lại — không có nó thì cách duy nhất
+         * thoát khỏi một lần `/me/progression` trả 500 là tải lại cả trang.
+         */
+        mutate: progressionSwr.mutate,
     }
 }

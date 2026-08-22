@@ -37,14 +37,21 @@ import type { Subject } from "../hooks/useQuerySubjectSwr"
  * đã seed đủ môn của FPT (~400) nên bản cũ — tải một trang 100 rồi lọc bằng JavaScript — cắt cụt
  * danh sách mà không có dấu hiệu nào.
  *
- * <p>Dropdown ngành phẳng theo đúng thứ tự BE trả (khối ngành rồi tới chuyên ngành của khối đó),
- * chuyên ngành thụt lề. Chọn KHỐI = xem cả chuyên ngành con, việc gộp do BE làm.
+ * <p>Bộ lọc ngành đi theo CHUỖI HAI CẤP — Khối ngành → Chuyên ngành — thay cho một dropdown phẳng
+ * có thụt lề. Danh sách phẳng còn đọc được khi catalog chỉ vài ngành; với syllabus FPT (nhiều khối,
+ * mỗi khối nhiều chuyên ngành) thì cuộn một danh sách trộn lẫn hai cấp không cho biết mình đang
+ * đứng ở khối nào. Chọn KHỐI = xem cả chuyên ngành con — việc gộp do BE làm, nên dù giao diện có
+ * hai ô thì vẫn CHỈ MỘT mã đi lên `?major=`.
  */
 export const SubjectCatalog = () => {
     const t = useTranslations("subjects")
     const { majors } = useQueryMajorsSwr()
     const { majorCode: myMajor } = useMyMajor()
     const [query, setQuery] = useState("")
+    // MỘT ô nhớ cho CẢ HAI dropdown ngành, không phải hai. Mã ngành đã tự mang cấp bậc
+    // (`parentCode`), nên chọn khối = ghi mã khối vào đây và chuyên ngành TỰ reset — không có cách
+    // nào để lọt trạng thái "Information Technology + Digital Marketing" như khi giữ hai state rời.
+    //
     // `undefined` = người dùng CHƯA tự chọn trong phiên này ⇒ lấy ngành trên hồ sơ làm mặc định.
     // `"all"` = họ đã bấm "Tất cả ngành" — phải phân biệt được với "chưa chọn", nếu không thì
     // mỗi lần hồ sơ load xong lại nhảy ngược về ngành của họ và nút "Tất cả" trông như hỏng.
@@ -63,18 +70,37 @@ export const SubjectCatalog = () => {
         q: deferredQuery,
     })
 
-    // Nhãn hiển thị trên trigger của 2 dropdown lọc.
-    const activeMajorLabel =
-        activeMajor === "all"
-            ? t("catalog.allMajors")
-            : (majors.find((major) => major.code === activeMajor)?.name ?? t("catalog.allMajors"))
+    // Hồ sơ chỉ lưu MỘT mã (`majorCode`) và mã đó thường là CHUYÊN NGÀNH con ("SE"), nên phải suy
+    // ngược ra khối cha thì hai dropdown mới hiện đúng cặp "Information Technology → Software
+    // Engineering" khi tự nhảy vào ngành đã lưu.
+    //
+    // Mã không tra được trong danh mục (danh mục chưa về, hoặc mã cũ đã bị gỡ) ⇒ hai dropdown về
+    // "Tất cả", NHƯNG bộ lọc gửi lên BE vẫn giữ nguyên `activeMajor`: hạ nó xuống "tất cả" chỉ vì
+    // danh sách ngành chưa tải xong là âm thầm nới rộng kết quả người dùng đang xem.
+    const selectedMajor = majors.find((major) => major.code === activeMajor) ?? null
+    const categoryCode = selectedMajor ? (selectedMajor.parentCode ?? selectedMajor.code) : null
+    const childCode = selectedMajor?.parentCode ? selectedMajor.code : null
+    const categoryName = majors.find((major) => major.code === categoryCode)?.name ?? null
+    // Cấp 1 chỉ gồm khối (`parentCode === null`); cấp 2 chỉ gồm con của khối đang chọn — chưa chọn
+    // khối thì KHÔNG có gì để liệt kê, nên dropdown cấp 2 ẩn hẳn thay vì mở ra một danh sách trộn.
+    const categories = majors.filter((major) => major.parentCode === null)
+    const children = categoryCode
+        ? majors.filter((major) => major.parentCode === categoryCode)
+        : []
+
+    // Nhãn hiển thị trên trigger của 3 dropdown lọc.
+    const activeMajorLabel = categoryName ?? t("catalog.allMajors")
+    const allInCategoryLabel = t("catalog.allInMajor", { major: categoryName ?? "" })
+    const activeChildLabel =
+        childCode !== null && selectedMajor ? selectedMajor.name : allInCategoryLabel
     const activeSemesterLabel =
         semester === null ? t("catalog.all") : t("semester", { count: semester })
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
-            {/* Lời mời chọn ngành cho người mới — tự ẩn khi đã chọn / đã bỏ qua / danh mục rỗng.
-                Đặt ở đây vì workplace chính là chỗ việc chọn ngành có tác dụng thấy được. */}
+            {/* Khảo sát chọn ngành cho người mới (modal 2 bước) — tự ẩn khi đã chọn / đã bỏ qua /
+                danh mục rỗng. Đặt ở đây vì workplace chính là chỗ việc chọn ngành có tác dụng
+                thấy được: lưu xong là lưới dưới đây lọc theo ngành đó ngay. */}
             <MascotMajorPicker />
             <div className="flex flex-col gap-1">
                 <Typography type="h4" weight="bold">
@@ -97,11 +123,11 @@ export const SubjectCatalog = () => {
                     placeholder={t("catalog.searchPlaceholder")}
                     className="sm:max-w-none"
                 />
-                {/* Gọn lại thành 2 dropdown: NGÀNH + KỲ (trước đây là hai hàng nút cuộn ngang).
+                {/* Chuỗi 3 dropdown: KHỐI NGÀNH → CHUYÊN NGÀNH → KỲ.
                     Kỳ liệt kê đủ 1..9 (SUBJECT_SEMESTERS) để chọn bất kỳ kỳ nào, kể cả kỳ chưa có
                     môn (lưới trống = "kỳ này chưa có môn", không phải hỏng). */}
                 <div className="flex flex-wrap gap-2">
-                    {majors.length > 0 ? (
+                    {categories.length > 0 ? (
                         <Dropdown>
                             <DropdownTrigger className="cursor-pointer rounded-2xl border border-default px-3 py-2">
                                 <div className="flex items-center gap-2">
@@ -119,15 +145,51 @@ export const SubjectCatalog = () => {
                                     <DropdownItem key="all" id="all" textValue={t("catalog.allMajors")}>
                                         {t("catalog.allMajors")}
                                     </DropdownItem>
-                                    {majors.map((major) => (
+                                    {categories.map((major) => (
                                         <DropdownItem
                                             key={major.code}
                                             id={major.code}
                                             textValue={major.name}
-                                            // Chuyên ngành thụt vào dưới khối của nó. Danh sách BE
-                                            // trả về đã đúng thứ tự khối → con, nên thụt lề là đủ
-                                            // để thấy cấp bậc, không cần dựng section lồng.
-                                            className={major.parentCode ? "pl-6" : "font-medium"}
+                                        >
+                                            {major.name}
+                                        </DropdownItem>
+                                    ))}
+                                </DropdownMenu>
+                            </DropdownPopover>
+                        </Dropdown>
+                    ) : null}
+
+                    {/* Cấp 2 chỉ tồn tại khi ĐANG có khối và khối đó CÓ con. Khối không có chuyên
+                        ngành mà vẫn hiện một ô bấm được nhưng rỗng thì đọc như đang hỏng. */}
+                    {children.length > 0 ? (
+                        <Dropdown>
+                            <DropdownTrigger className="cursor-pointer rounded-2xl border border-default px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="max-w-56 truncate text-sm font-medium">
+                                        {activeChildLabel}
+                                    </span>
+                                    <CaretDownIcon aria-hidden focusable="false" className="size-4" />
+                                </div>
+                            </DropdownTrigger>
+                            <DropdownPopover className="min-w-56">
+                                <DropdownMenu
+                                    aria-label={allInCategoryLabel}
+                                    onAction={(key) => setMajorFilter(String(key))}
+                                >
+                                    {/* "Tất cả <khối>" = chính mã KHỐI: BE tự gộp môn của mọi
+                                        chuyên ngành con, nên bỏ chọn con là quay về mã cha. */}
+                                    <DropdownItem
+                                        key={categoryCode ?? "all"}
+                                        id={categoryCode ?? "all"}
+                                        textValue={allInCategoryLabel}
+                                    >
+                                        {allInCategoryLabel}
+                                    </DropdownItem>
+                                    {children.map((major) => (
+                                        <DropdownItem
+                                            key={major.code}
+                                            id={major.code}
+                                            textValue={major.name}
                                         >
                                             {major.name}
                                         </DropdownItem>

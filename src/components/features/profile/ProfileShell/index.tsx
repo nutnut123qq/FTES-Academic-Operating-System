@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback } from "react"
-import { Avatar, AvatarFallback, AvatarImage, Button, Tabs, Typography, toast } from "@heroui/react"
+import { Button, Tabs, Typography, toast } from "@heroui/react"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useLocale, useTranslations } from "next-intl"
 import {
@@ -139,9 +139,13 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                 >
                     {profile ? (
                         <div className="flex flex-col items-center gap-4 text-center">
+                            {/* MỘT đường vẽ cho cả hai ca. `UserAvatar` tự trả avatar TRẦN khi
+                                `frameCode` rỗng, nên không cần nhánh rẽ `avatarFrameCode ? … : …`
+                                — nhánh "không khung" trước đây dựng `<Avatar><AvatarImage>` trần
+                                nên mất art tròn, mất bản WebP nhẹ và mất guard uuid của
+                                `avatarInitials`. Vòng gradient vẫn chỉ bọc ca KHÔNG khung (khung
+                                tự là viền, lồng thêm vòng là hai viền chồng nhau). */}
                             {profile.avatarFrameCode ? (
-                                // Có khung viền → vẽ đúng khung (bản thân khung đã là viền, bỏ
-                                // vòng gradient mặc định để không lồng 2 viền).
                                 <UserAvatar
                                     size="lg"
                                     className="size-20 rounded-full border-2 border-background md:size-24"
@@ -152,14 +156,13 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                 />
                             ) : (
                                 <div className="rounded-full bg-gradient-to-tr from-accent to-success p-0.5">
-                                    <Avatar className="size-20 rounded-full border-2 border-background md:size-24">
-                                        {profile.avatarUrl ? (
-                                            <AvatarImage src={profile.avatarUrl} alt={profile.name} />
-                                        ) : null}
-                                        <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent md:text-2xl">
-                                            {(profile.name ?? "?").slice(0, 1).toUpperCase()}
-                                        </AvatarFallback>
-                                    </Avatar>
+                                    <UserAvatar
+                                        size="lg"
+                                        className="size-20 rounded-full border-2 border-background md:size-24"
+                                        username={profile.name}
+                                        avatar={profile.avatarUrl}
+                                        seed={profile.username}
+                                    />
                                 </div>
                             )}
                             <div className="flex flex-col gap-0">

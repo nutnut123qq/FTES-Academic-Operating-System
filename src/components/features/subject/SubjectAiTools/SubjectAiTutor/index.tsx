@@ -32,6 +32,7 @@ import {
     createSession,
     isFreeModel,
     isModelDown,
+    isModelLocked,
     sendSessionMessageStream,
 } from "@/modules/api/rest/ai"
 
@@ -151,9 +152,9 @@ export const SubjectAiTutor = ({
     const modelsSwr = useGetAiCatalogModelsSwr()
     const catalogModels = modelsSwr.data?.models ?? []
     const hasCatalog = !modelsSwr.error && catalogModels.length > 0
-    // Down models stay listed (so the user sees why) but cannot be picked.
+    // Down AND spend-gated (locked) models stay listed but cannot be picked (locked → 403 on use).
     const disabledModelKeys = catalogModels
-        .filter(isModelDown)
+        .filter((catalogModel) => isModelDown(catalogModel) || isModelLocked(catalogModel))
         .map((catalogModel) => String(catalogModel.id))
     // Prefer the catalog chat default only when free/unlocked; the ai-service ships a spend-gated
     // default (gpt-4o-mini) that 403s free users, so fall back to gpt-oss (free) otherwise.
@@ -594,6 +595,13 @@ export const SubjectAiTutor = ({
                                                             {t(
                                                                 "subjects.aiTools.tutor.modelUnavailable",
                                                             )}
+                                                        </Typography>
+                                                    ) : isModelLocked(catalogModel) ? (
+                                                        <Typography
+                                                            type="body-xs"
+                                                            color="muted"
+                                                        >
+                                                            🔒
                                                         </Typography>
                                                     ) : isFreeModel(catalogModel) ? (
                                                         <Typography

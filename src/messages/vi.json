@@ -23,7 +23,10 @@
                 "title": "Bạn học ngành nào?",
                 "body": "Chọn ngành để workspace chỉ hiện các môn của ngành bạn. Bạn đổi lại được bất cứ lúc nào trong hồ sơ.",
                 "dismiss": "Để sau",
-                "error": "Chưa lưu được lựa chọn. Bạn thử lại giúp nhé."
+                "error": "Chưa lưu được lựa chọn. Bạn thử lại giúp nhé.",
+                "specializationTitle": "Chuyên ngành nào?",
+                "specializationBody": "Chọn chuyên ngành của bạn trong {major}.",
+                "noSpecialization": "{major} chưa có chuyên ngành — mình lưu luôn khối này nhé."
             }
         },
         "assistant": {
@@ -4105,7 +4108,9 @@
             "totalXp": "{xp} XP",
             "toNext": "Còn {xp} XP để lên {tier}",
             "progressAria": "Tiến độ lên hạng {tier}",
-            "topTier": "Bạn đã đạt hạng cao nhất."
+            "topTier": "Bạn đã đạt hạng cao nhất.",
+            "unavailable": "Chưa đọc được hạng của bạn.",
+            "retry": "Thử lại"
         },
         "tiers": {
             "bronze": "Đồng",
@@ -4113,6 +4118,18 @@
             "gold": "Vàng",
             "platinum": "Bạch Kim",
             "diamond": "Kim Cương"
+        },
+        "rankTiers": {
+            "title": "Thang hạng",
+            "subtitle": "Tất cả hạng của hệ thống, xếp theo tổng XP.",
+            "openAria": "Xem tất cả hạng của hệ thống",
+            "threshold": "Từ {xp} XP",
+            "current": "Hạng hiện tại",
+            "currentAria": "{tier} — hạng hiện tại của bạn",
+            "unlockedAria": "{tier} — đã mở khoá",
+            "lockedAria": "{tier} — chưa mở khoá, cần {xp} XP",
+            "guestHint": "Đăng nhập để biết bạn đang ở hạng nào.",
+            "close": "Đóng"
         },
         "moment": {
             "levelUpTitle": "Lên cấp!",
@@ -4274,6 +4291,7 @@
             "you": "Bạn",
             "myRank": "Hạng của bạn trong kỳ này: {rank}",
             "myRankUnranked": "Bạn chưa có hạng trong kỳ này.",
+            "showMore": "Xem thêm — top {limit}",
             "refresh": "Làm mới",
             "guest": "Đăng nhập để xem bảng xếp hạng theo kỳ.",
             "empty": "Chưa có ai lên bảng trong kỳ này.",
@@ -5750,6 +5768,7 @@
             "searchPlaceholder": "Tìm môn học",
             "all": "Tất cả",
             "allMajors": "Tất cả ngành",
+            "allInMajor": "Tất cả {major}",
             "empty": "Không có môn nào khớp tìm kiếm.",
             "emptyMajor": "Ngành này chưa có môn nào."
         },

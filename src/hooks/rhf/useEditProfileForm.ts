@@ -258,5 +258,10 @@ export const useEditProfileForm = () => {
         onAvatarChange,
         onAvatarFile,
         shownAvatar,
+        // Hồ sơ thô cho tầng vẽ: avatar ở đầu trang phải dựng bằng `UserAvatar` (một chuỗi
+        // fallback duy nhất cho cả app), mà `UserAvatar` cần `username`/`seed`/mã khung —
+        // ba thứ chỉ có ở đây. Trả nguyên `profile` thay vì bóc từng trường để không phải
+        // nới hợp đồng hook mỗi lần tầng vẽ cần thêm một mẩu nhận diện.
+        profile,
     }
 }

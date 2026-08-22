@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Avatar, AvatarFallback, AvatarImage, Typography } from "@heroui/react"
+import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { CaretRightIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
@@ -9,6 +9,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import {
     useQueryPublicCommunitySwr,
     type PublicCommunityUser,
@@ -33,12 +34,16 @@ const UserRow = ({ user }: { user: PublicCommunityUser }) => (
         href={`/u/${user.username}`}
         className="group flex items-center gap-3 rounded-2xl border border-separator p-3 no-underline transition-colors hover:bg-default/40"
     >
-        <Avatar className="size-10 rounded-full">
-            {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
-            <AvatarFallback className="bg-accent/10 text-sm font-bold text-accent">
-                {user.name.slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-        </Avatar>
+        {/* `UserAvatar` chứ không `<Avatar><AvatarImage>` trần: danh sách theo dõi cũng phải
+            đi qua đúng một chuỗi fallback của app (art tròn → thumbnail WebP → DiceBear →
+            initials có guard uuid). `name` ở đây degrade về `username` khi thiếu hồ sơ, nên
+            `seed` lấy `username` để cùng một người luôn ra cùng một khuôn mặt. */}
+        <UserAvatar
+            className="size-10"
+            username={user.name}
+            avatar={user.avatarUrl}
+            seed={user.username}
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-0">
             <Typography type="body-sm" weight="medium" truncate>
                 {user.name}

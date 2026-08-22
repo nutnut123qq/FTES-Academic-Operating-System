@@ -92,3 +92,20 @@ silver đỡ nhất vì mang ít hoạ tiết nhất.*
       sang đường dẫn `-round` — **lane backend**, danh sách đường dẫn đã bàn giao.
 - [ ] 7.2 Xoá art cũ — CHỈ sau khi 7.1 đã chạy trên production.
 - [ ] 7.3 Xem thật trên trình duyệt — chưa làm (phiên này không dựng dev server).
+
+## 8. HARDEN (2026-08-22) — vá nợ sau vòng review đối kháng
+
+- [x] 8.1 Năm bề mặt hồ sơ còn dựng `<Avatar><AvatarImage src={profile.avatarUrl}>` TRẦN đã đổi
+      sang `UserAvatar` — tức là mới có art tròn, thumbnail WebP và guard uuid của `avatarInitials`:
+      `app/[locale]/profile/edit/page.tsx` (avatar đầu trang; nó hiện VUÔNG ngay bên trên ô xem
+      trước TRÒN của `AvatarAppearancePicker`), `ProfileShell/index.tsx` + `ProfilePublic/index.tsx`
+      (nhánh `avatarFrameCode == null` — ca của đa số người dùng), `ProfilePublic/ProfileCommunityTab`
+      và `ProfileCommunity/ProfileActivity` (hàng follower/following).
+- [x] 8.2 `/profile/edit` giữ được preview blob khi đang upload: truyền `avatar={shownAvatar}`
+      (= `preview ?? profile.avatarUrl`) vào `UserAvatar`; `blob:` không khớp mẫu art nên đi thẳng.
+      `useEditProfileForm` trả thêm `profile` để tầng vẽ có `username`/`seed`/mã khung.
+- [x] 8.3 `globals.css`: thêm `object-fit: cover` cho `.avatar__image` vào ĐÚNG khối override
+      un-layered đang sửa radius. HeroUI không khai `object-fit`, mặc định của `<img>` là `fill`,
+      nên ảnh người dùng TỰ TẢI LÊN không vuông bị bóp méo ở mọi bề mặt (FE không crop, BE không
+      truyền `namedTransform`). Art album + DiceBear vuông 512 nên lỗi trốn được suốt hai đợt trước.
+- [x] 8.4 `npx tsc --noEmit` sạch · `npm run test` 267 file / 1982 test xanh.

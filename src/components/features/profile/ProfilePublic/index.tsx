@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage, Tabs, Typography } from "@heroui/react"
+import { Tabs, Typography } from "@heroui/react"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -131,25 +131,19 @@ export const ProfilePublic = () => {
                         <div className="overflow-hidden rounded-2xl border border-separator">
                             <div className="flex flex-col gap-4 p-6">
                                 <div className="flex items-center gap-4">
-                                    {profile.avatarFrameCode ? (
-                                        <UserAvatar
-                                            size="lg"
-                                            className="size-16 shrink-0"
-                                            username={profile.name}
-                                            avatar={profile.avatarUrl}
-                                            seed={profile.username}
-                                            frameCode={profile.avatarFrameCode}
-                                        />
-                                    ) : (
-                                        <Avatar className="size-16 shrink-0 rounded-full">
-                                            {profile.avatarUrl ? (
-                                                <AvatarImage src={profile.avatarUrl} alt={profile.name} />
-                                            ) : null}
-                                            <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent">
-                                                {profile.name.slice(0, 1).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    )}
+                                    {/* Không rẽ nhánh theo `avatarFrameCode` nữa: `UserAvatar` đã
+                                        tự trả avatar trần khi không có mã khung. Nhánh cũ dựng
+                                        `<Avatar><AvatarImage>` trần nên người KHÔNG đeo khung —
+                                        đa số — mất art tròn, mất bản WebP nhẹ và in initials từ
+                                        `name.slice(0,1)` (một `name` là uuid sẽ ra chữ số). */}
+                                    <UserAvatar
+                                        size="lg"
+                                        className="size-16 shrink-0"
+                                        username={profile.name}
+                                        avatar={profile.avatarUrl}
+                                        seed={profile.username}
+                                        frameCode={profile.avatarFrameCode}
+                                    />
                                     <div className="min-w-0">
                                         <div className="flex min-w-0 items-center gap-1">
                                             <Typography type="h4" weight="bold" truncate>

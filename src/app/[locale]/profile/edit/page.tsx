@@ -1,23 +1,14 @@
 "use client"
 
 import React from "react"
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-    Button,
-    FieldError,
-    Input,
-    Label,
-    TextField,
-    Typography,
-} from "@heroui/react"
+import { Button, FieldError, Input, Label, TextField, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Controller, type Control } from "react-hook-form"
 import { CameraIcon } from "@phosphor-icons/react"
 import { useEditProfileForm, type EditProfileFormValues } from "@/hooks/rhf/useEditProfileForm"
 import { AvatarAppearancePicker } from "@/components/features/profile/AvatarAppearancePicker"
 import { AvatarCropDialog } from "@/components/features/profile/AvatarCropDialog"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { CampusPicker } from "@/components/reuseable/CampusPicker"
 import { MajorPicker } from "@/components/reuseable/MajorPicker"
 import { useQueryCampusesSwr } from "@/components/features/community/hooks/useQueryCampusesSwr"
@@ -155,7 +146,7 @@ const MajorRow = ({
  */
 const EditProfilePage = () => {
     const t = useTranslations()
-    const { control, formState, onSubmit, fileInputRef, onPickAvatar, onAvatarFile, shownAvatar } =
+    const { control, formState, onSubmit, fileInputRef, onPickAvatar, onAvatarFile, shownAvatar, profile } =
         useEditProfileForm()
     const [avatarSource, setAvatarSource] = React.useState<File | null>(null)
     const [avatarError, setAvatarError] = React.useState<string | null>(null)
@@ -194,10 +185,22 @@ const EditProfilePage = () => {
 
             {/* avatar */}
             <div className="flex items-center gap-4">
-                <Avatar className="size-20 rounded-full">
-                    {shownAvatar ? <AvatarImage src={shownAvatar} alt="" /> : null}
-                    <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent">?</AvatarFallback>
-                </Avatar>
+                {/* Dựng bằng `UserAvatar` chứ KHÔNG `<Avatar><AvatarImage>` trần: chỉ đường
+                    qua đó mới có art tròn (`roundProfileArtUrl`), bản WebP nhẹ
+                    (`profileAssetThumbnailUrl`) và chuỗi fallback DiceBear→initials. Trước đây
+                    khối này đi thẳng vào `AvatarImage`, nên một người đeo art album mặc định
+                    thấy avatar VUÔNG ở đầu trang trong khi ô xem trước của
+                    `AvatarAppearancePicker` ngay bên dưới — vốn đi qua `UserAvatar` — hiện
+                    TRÒN: hai hình dạng của cùng một người trên cùng một màn.
+                    `preview` là blob: nên không khớp mẫu art, đi thẳng như cũ. */}
+                <UserAvatar
+                    className="size-20"
+                    size="lg"
+                    username={profile?.displayName ?? profile?.username}
+                    avatar={shownAvatar}
+                    seed={profile?.userId}
+                    frameCode={profile?.avatarFrame?.code}
+                />
                 <div className="flex flex-col items-start gap-1">
                     <Button type="button" variant="secondary" size="sm" onPress={onPickAvatar}>
                         <CameraIcon className="size-4" aria-hidden focusable="false" />

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage, Button, Typography } from "@heroui/react"
+import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import {
     CalendarCheckIcon,
@@ -17,6 +17,7 @@ import {
     UsersThreeIcon,
     type Icon,
 } from "@phosphor-icons/react"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useQueryActivitySwr } from "@/components/features/activity/hooks/useQueryActivitySwr"
 import { activityMessageKey, type ActivityKind } from "@/components/features/activity/model"
 
@@ -138,16 +139,14 @@ export const CommunityUserRow = ({
 }: {
     user: { id: string; name: string; avatarUrl: string; headline: string }
 }) => {
-    const initials = user.name.slice(0, 1).toUpperCase()
-
     return (
         <div className="flex items-center gap-3 rounded-2xl border border-separator p-3">
-            <Avatar className="size-10 rounded-full">
-                {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
-                <AvatarFallback className="bg-accent/10 text-sm font-bold text-accent">
-                    {initials}
-                </AvatarFallback>
-            </Avatar>
+            {/* `UserAvatar` chứ không `<Avatar><AvatarImage>` trần — cùng lý do như mọi bề mặt
+                nhận diện khác: art tròn, thumbnail WebP, DiceBear và initials có guard uuid nằm
+                TRONG `UserAvatar`, không rắc lại ở từng call-site. Payload này không có
+                `username` nên `seed` dùng `user.id` (uuid vẫn là seed hợp lệ, chỉ không được
+                in ra thành chữ — `avatarInitials` đã chặn). */}
+            <UserAvatar className="size-10" username={user.name} avatar={user.avatarUrl} seed={user.id} />
             <div className="flex min-w-0 flex-1 flex-col gap-0">
                 <Typography type="body-sm" weight="medium" truncate>
                     {user.name}

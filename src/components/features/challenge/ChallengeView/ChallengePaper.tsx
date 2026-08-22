@@ -104,14 +104,29 @@ export interface ChallengePaperProps {
      */
     createdAt?: string | null
     /**
-     * Rendered inside a DIALOG rather than on a page. The FE-style two-pane layout stays,
-     * but its viewport-pinned height and capped nested scrollers do not: the dialog is
-     * shorter than the viewport and owns the vertical scroll.
+     * Rendered inside a DIALOG rather than on a page. Bố cục hai pane giữ NGUYÊN; thứ duy
+     * nhất đổi là khung đề lấy chiều cao TỪ ĐÂU: trên trang nó đo theo viewport
+     * (`lg:h-[calc(100dvh-12rem)]`), trong dialog nó `lg:flex-1` vào chiều cao mà dialog
+     * đã tự ghim (`h-[92vh]`) — đúng cách `SubjectFeAlbum` nhận chiều cao từ dialog FE.
+     *
+     * Trước đây `inModal` gỡ HẲN mọi ràng buộc chiều cao và để cả dialog cuộn như một
+     * khối. Hệ quả là khung xem đề mắc kẹt ở sàn `60dvh` — người đọc mở popup lên chính
+     * là để nhìn đề, mà đề lại là thứ nhỏ nhất trong popup. Giờ dialog cho chiều cao,
+     * khung đề ăn hết phần thừa, còn cột phải cuộn trong chính nó y như trên trang.
      *
      * Below `lg` the panes still stack naturally. From `lg` up, the paper stays left and
      * the hand-in/uploader/comments column stays right, matching {@link SubjectFeAlbum}.
      */
     inModal?: boolean
+    /**
+     * Cụm tiêu đề của đề (mã đề · chip · mô tả) khi chủ gọi muốn nó nằm ở ĐẦU CỘT PHẢI,
+     * ngay trên "Tệp đính kèm", thay vì chiếm cả dải ngang phía trên khung đề.
+     *
+     * Chỉ popup truyền (xem `ChallengeView`); trên trang là `undefined` và cột phải giữ
+     * nguyên như cũ. Nhận `ReactNode` chứ không tự dựng: cụm ấy thuộc về `ChallengeView`
+     * (nó mới biết type/status/tag), component này chỉ cho nó CHỖ ĐỨNG.
+     */
+    heading?: React.ReactNode
 }
 
 /**
@@ -185,6 +200,7 @@ export const ChallengePaper = ({
     author,
     createdAt,
     inModal = false,
+    heading,
 }: ChallengePaperProps) => {
     const t = useTranslations("challenge")
     const kind = classifyChallengePaper(paperUrl, paperMime)
@@ -264,7 +280,26 @@ export const ChallengePaper = ({
         sections.length > 0 || kind === "IMAGE" || kind === "PDF" || Boolean(challengeId)
 
     return (
-        <section className="flex flex-col gap-3">
+        <section
+            className={cn(
+                "flex flex-col gap-3",
+                // Mắt xích giữa: dialog ghim chiều cao → `ChallengeView` `flex-1` vào đó →
+                // section này `flex-1` tiếp → khung đề bên dưới mới có cái để `flex-1`.
+                // Thiếu một mắt là `lg:flex-1` của khung rơi vào chiều cao AUTO và không
+                // cao thêm được chút nào. Chỉ khi CÓ khung (`isFramed`): một đề .zip /
+                // không xem được là mấy dòng chữ, kéo giãn nó ra chẳng để làm gì.
+                //
+                // ★ `min-h-0` PHẢI có tiền tố `lg:`, đúng bằng phạm vi `lg:flex-1` phục vụ.
+                // Bỏ tiền tố là bỏ sàn `min-height:auto` ở MỌI cỡ màn: dưới `lg`, cột
+                // `min-h-0 flex-1 overflow-y-auto` của `ChallengeView` có chiều cao xác
+                // định (92vh của dialog) nên flexbox co `section` này lại — và div khung
+                // bên trong có `overflow-hidden` nên sàn tự động của nó cũng là 0, tức nó
+                // co theo và CẮT nội dung. Kết quả trên điện thoại: thấy một phần ảnh đề,
+                // không thấy khối nộp bài / thảo luận, và không có thanh cuộn nào để tới
+                // (mọi item đã co vừa khít nên `scrollHeight === clientHeight`).
+                inModal && isFramed && "lg:min-h-0 lg:flex-1",
+            )}
+        >
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <Typography type="body" weight="semibold">
                     {t("paper.title")}
@@ -281,10 +316,20 @@ export const ChallengePaper = ({
                         ? expand.frameClassName
                         : cn(
                             "overflow-hidden rounded-2xl border border-separator",
-                            // Same responsive columns as the FE popup. `inModal` only removes
-                            // viewport-derived HEIGHT/scroll caps below; it must not move the
-                            // discussion under the paper on a desktop dialog.
-                            "lg:grid lg:grid-cols-[minmax(0,1fr)_400px]",
+                            // Hai pane cạnh nhau từ `lg` ở CẢ hai bề mặt — `inModal` không bao
+                            // giờ được đẩy phần thảo luận xuống dưới đề trên một dialog desktop;
+                            // nó chỉ đổi chiều cao lấy từ đâu, và bề rộng của cột phải:
+                            // Popup rộng gần trọn màn hình, mà đề PE là ảnh scan A4 DỌC và
+                            // `object-contain` nên nó bị chặn bởi CHIỀU CAO, không bởi bề
+                            // ngang: ở 1920px, một cột phải cố định 400px để lại ~930px nền
+                            // trống trong pane trái. Nên chỗ dư phải trả về cho cột phải theo
+                            // TỶ LỆ (`32%`, sàn `25rem`) chứ không bằng một bậc `2xl` cố định
+                            // — 30rem chỉ ăn 80px của 930px đó. Chỉ đổi ở nhánh POPUP: trang
+                            // `/challenges/[challengeId]` giữ nguyên `_400px`, vì "chỉ đổi khi
+                            // inModal" là phạm vi chủ dự án đã chốt.
+                            inModal
+                                ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(25rem,32%)]"
+                                : "lg:grid lg:grid-cols-[minmax(0,1fr)_400px]",
                             // A 0-floored row + `min-h-0` on the pane are what let a PORTRAIT scan
                             // shrink to the frame instead of inflating it: a grid item's automatic
                             // minimum size is its CONTENT, and `overflow-hidden` then clips it.
@@ -292,8 +337,13 @@ export const ChallengePaper = ({
                             // it takes nearly the whole viewport once scrolled to; the header
                             // above it scrolls away.
                             isFramed
-                                && !inModal
-                                && "lg:h-[calc(100dvh-12rem)] lg:min-h-[30rem] lg:grid-rows-[minmax(0,1fr)]",
+                                && cn(
+                                    "lg:min-h-[30rem] lg:grid-rows-[minmax(0,1fr)]",
+                                    // Trong dialog KHÔNG đo theo viewport: dialog chỉ cao
+                                    // 92vh và còn máng của nó, nên `100dvh-12rem` sẽ tràn
+                                    // rồi bị cắt. Nó `flex-1` vào phần dialog còn lại.
+                                    inModal ? "lg:flex-1" : "lg:h-[calc(100dvh-12rem)]",
+                                ),
                         )
                 }
             >
@@ -303,7 +353,6 @@ export const ChallengePaper = ({
                     <PaperSections
                         sections={sections}
                         title={title}
-                        inModal={inModal}
                         expand={inModal ? undefined : expand}
                     />
                 ) : kind === "IMAGE" ? (
@@ -314,7 +363,9 @@ export const ChallengePaper = ({
                         className={
                             expand.isExpanded
                                 ? expand.paneClassName
-                                : cn("h-[60dvh] min-h-0", !inModal && "lg:h-full")
+                                // `min-h-0` chỉ có nghĩa khi pane là grid item của khung
+                                // `lg:grid`; dưới `lg` nó chỉ bỏ sàn co để khung cắt mất ảnh.
+                                : "h-[60dvh] lg:h-full lg:min-h-0"
                         }
                         isExpanded={expand.isExpanded}
                         // Not in a dialog: it already covers the page, and a `fixed` overlay
@@ -330,7 +381,7 @@ export const ChallengePaper = ({
                     <iframe
                         src={paperUrl}
                         title={t("paper.imageAlt", { title })}
-                        className={cn("h-[60dvh] w-full bg-default", !inModal && "lg:h-full")}
+                        className="h-[60dvh] w-full bg-default lg:h-full"
                     />
                 ) : kind === "ARCHIVE" ? (
                     /* An archive IS a legitimate paper here (a folder of source + documents the
@@ -362,8 +413,7 @@ export const ChallengePaper = ({
                     is `lg:`-only: below that the panes stack and the page scrolls as one. */}
                 <div
                     className={cn(
-                        "flex min-h-0 flex-col gap-4 bg-overlay p-4",
-                        !inModal && "lg:overflow-hidden",
+                        "flex min-h-0 flex-col gap-4 bg-overlay p-4 lg:overflow-hidden",
                         // Full screen + "hide the comments": `display:none` drops the column
                         // from the layout AND the a11y tree while the thread keeps its scroll,
                         // its page and any half-typed comment. The width it frees goes to the
@@ -371,19 +421,31 @@ export const ChallengePaper = ({
                         !expand.areCommentsVisible && "hidden",
                     )}
                 >
+                    {/* Mã đề + chip + mô tả, khi popup gửi xuống: đứng TRÊN "Tệp đính kèm"
+                        đúng như chủ dự án chốt — nhưng là con TRỰC TIẾP của cột phải, KHÔNG
+                        nằm trong dải bị cap `lg:max-h-[45%]` bên dưới. Nhét nó vào trong dải
+                        đó thì trên laptop 768px (dải ≈ 264px) riêng cụm tiêu đề đã ~150px và
+                        nút "Nộp bài" bị đẩy ra ngoài tầm nhìn của một ô cuộn nhỏ. Tiêu đề là
+                        NHẬN DẠNG, không phải nội dung cuộn cùng tệp đính kèm; `shrink-0` để
+                        nó không bị co khi cột chật. `hidden lg:flex` vì dưới `lg` hai pane
+                        xếp dọc và bản trên cùng của `ChallengeView` mới là bản đúng thứ tự
+                        đọc — chỉ một trong hai bản hiện tại mỗi lúc. */}
+                    {heading ? (
+                        <div className="hidden shrink-0 flex-col gap-3 lg:flex">{heading}</div>
+                    ) : null}
+
                     <div
                         className={cn(
                             "flex flex-col gap-4",
                             // With a thread underneath, the paper-side strip is capped so a
                             // long template list can never push the discussion out of the
                             // frame; with no thread it simply owns the whole column, exactly
-                            // as the pane did before. In a dialog neither cap applies: the
-                            // hand-in panel is TALL and must stay whole, so it keeps its
-                            // natural height and the dialog scrolls to it.
-                            !inModal
-                                && (challengeId
-                                    ? "lg:max-h-[45%] lg:overflow-y-auto"
-                                    : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto"),
+                            // as the pane did before. Popup dùng CHUNG luật này: khung đề
+                            // giờ cũng cao bằng dialog, nên cột phải phải cuộn trong chính
+                            // nó — để nó cao tự nhiên là đẩy khung đề bẹp trở lại.
+                            challengeId
+                                ? "lg:max-h-[45%] lg:overflow-y-auto"
+                                : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
                         )}
                     >
                         {/* The templates come FIRST: they are what the candidate needs in hand to
@@ -422,8 +484,6 @@ export const ChallengePaper = ({
  *
  * @param props.sections - inline sections from {@link groupChallengePaperFiles}, in order.
  * @param props.title - the challenge title, the fallback accessible name of a file.
- * @param props.inModal - in a dialog the pane keeps its own `60dvh` instead of filling a
- *   viewport-tall frame that does not exist there (see {@link ChallengePaperProps.inModal}).
  * @param props.expand - full-screen controls, forwarded to the ONE-section case only. A
  *   multi-section paper is a scrolling column of cards, and a card growing to the viewport
  *   from inside a column the reader is scrolling is a jump, not an expansion — so those
@@ -432,12 +492,10 @@ export const ChallengePaper = ({
 const PaperSections = ({
     sections,
     title,
-    inModal,
     expand,
 }: {
     sections: Array<ChallengePaperSection>
     title: string
-    inModal: boolean
     expand?: ExamExpandControls
 }) => {
     const only = sections.length === 1 ? sections[0] : undefined
@@ -447,11 +505,7 @@ const PaperSections = ({
                 section={only}
                 title={title}
                 className={
-                    expand?.isExpanded
-                        ? expand.paneClassName
-                        : inModal
-                            ? "h-[60dvh]"
-                            : "h-[60dvh] lg:h-full"
+                    expand?.isExpanded ? expand.paneClassName : "h-[60dvh] lg:h-full"
                 }
                 expand={expand}
             />
@@ -459,12 +513,7 @@ const PaperSections = ({
     }
 
     return (
-        <div
-            className={cn(
-                "flex min-h-0 flex-col gap-3 overflow-y-auto p-3",
-                !inModal && "lg:h-full",
-            )}
-        >
+        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto p-3 lg:h-full">
             {sections.map((section) => (
                 <div
                     key={sectionKey(section)}

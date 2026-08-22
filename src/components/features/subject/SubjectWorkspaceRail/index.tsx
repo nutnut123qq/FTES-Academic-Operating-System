@@ -261,8 +261,7 @@ export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
 
             {/* Đề mở TẠI CHỖ. Cùng khuôn với dialog của ExamList và popup bài viết của
                 CommunityFeed: thân dialog là CHÍNH component mà route render, nên popup và
-                `/challenges/{id}` không thể trôi khỏi nhau. Dialog giữ phần cuộn — bên trong
-                `ChallengeView` không tự tạo vùng cuộn nào, nên đề dài sẽ bị cắt nếu không. */}
+                `/challenges/{id}` không thể trôi khỏi nhau. */}
             <Modal
                 isOpen={openedChallengeId !== null}
                 onOpenChange={(open) => {
@@ -272,15 +271,44 @@ export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
                 }}
             >
                 <Modal.Backdrop>
-                    <Modal.Container className="p-3 sm:p-6">
-                        <Modal.Dialog className="max-h-[90vh] w-[95vw] max-w-6xl overflow-y-auto">
+                    {/*
+                     * Popup lấy gần TRỌN bề ngang màn hình, chỉ chừa máng mỏng hai bên.
+                     * Thủ phạm của cái popup "chỉ chiếm khúc giữa" là trần `max-w-6xl`
+                     * (72rem): trên màn 1080p trở lên nó bó dialog lại còn chưa tới 2/3
+                     * màn, hai bên bỏ trắng, trong khi thứ nằm trong đó là một trang đề
+                     * A4 cần được phóng to hết cỡ. Bỏ trần, ghim `sm:w-[96vw]`; máng của
+                     * container hạ xuống `sm:p-2` để 96vw + máng vẫn lọt trong viewport.
+                     * Dưới `sm` không đặt bề ngang: `.modal__dialog` đã `w-full` và
+                     * container còn `w-full` (chỉ `sm:` mới `w-fit`), nên nó tự vừa.
+                     *
+                     * `h-[92vh]` + `overflow-hidden` là điều kiện để khung xem đề cao lên
+                     * được: chiều cao phải ĐI TỪ TRÊN XUỐNG. Để dialog co theo nội dung là
+                     * bài toán con gà quả trứng mà nhánh FE (`ExamList`) đã gặp và giải
+                     * đúng như thế — popup chỉ cao bằng khung ảnh, mà khung ảnh thì đợi
+                     * popup cho chỗ. Ghim chiều cao xong, `ChallengeView` `flex-1` vào và
+                     * giữ phần cuộn, khung đề `flex-1` tiếp — thoát cái sàn `60dvh`.
+                     *
+                     * ★ `max-w-none` KHÔNG PHẢI THỪA. `Modal.Container` không truyền `size`
+                     * ⇒ HeroUI lấy `defaultVariants.size = "md"` ⇒ dialog luôn mang class
+                     * `modal__dialog--md`, mà `modal.css` bake `.modal__dialog--md { max-width:
+                     * 28rem }` trong `@layer components`. Bỏ `max-w-6xl` mà không thay bằng gì
+                     * thì không còn utility nào tranh với 28rem: popup HẸP LẠI còn 448px (nhỏ
+                     * hơn cả bản cũ) và từ `lg` khung đề `lg:grid-cols-[minmax(0,1fr)_...]` chỉ
+                     * còn ~16px cho cột trái — ảnh đề biến mất. Trần mặc định phải được GỠ
+                     * TƯỜNG MINH, không phải để trống.
+                     */}
+                    <Modal.Container className="p-3 sm:p-2">
+                        <Modal.Dialog className="h-[92vh] max-h-[92vh] max-w-none overflow-hidden sm:w-[96vw]">
                             <Modal.CloseTrigger
                                 aria-label={t("practice.exam.closeExam")}
                                 className="z-20"
                             />
                             {openedChallengeId !== null ? (
                                 <>
-                                    <div className="flex justify-end pe-10">
+                                    {/* `shrink-0`: dialog giờ cao cố định nên hàng này là
+                                        flex item — không được co lại nhường chỗ cho khung
+                                        đề, nếu không nút "Mở trang đầy đủ" bị bóp dẹt. */}
+                                    <div className="flex shrink-0 justify-end pe-10">
                                         <Button
                                             size="sm"
                                             variant="tertiary"

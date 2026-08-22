@@ -44,7 +44,16 @@ vi.mock("./EssayChallengePanel", () => ({
 vi.mock("./UiUxChallengeEditor", () => ({
     UiUxChallengeEditor: () => <div data-testid="surface-uiux" />,
 }))
-vi.mock("./ChallengePaper", () => ({ ChallengePaper: () => null }))
+/**
+ * Bề mặt đề thi rút gọn còn ĐÚNG thứ nó được trao: có `heading` hay không. Bố cục bên
+ * trong nó (khung đề, cột phải) đã được ghim ở `ChallengePaper.test.tsx`; ở đây chỉ hỏi
+ * `ChallengeView` có chuyển cụm tiêu đề xuống hay không.
+ */
+vi.mock("./ChallengePaper", () => ({
+    ChallengePaper: ({ heading }: { heading?: React.ReactNode }) => (
+        <div data-testid="surface-paper">{heading}</div>
+    ),
+}))
 vi.mock("@/components/reuseable/MarkdownContent", () => ({ MarkdownContent: () => null }))
 vi.mock("@/components/features/subject/SubjectWorkspaceShell", () => ({
     SubjectWorkspaceShell: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
@@ -122,5 +131,65 @@ describe("ChallengeSolveSurface — bề mặt theo type", () => {
 
         expect(screen.getByTestId("surface-code")).toBeTruthy()
         expect(screen.queryByTestId("surface-essay")).toBeNull()
+    })
+})
+
+/**
+ * Cụm tiêu đề (mã đề · chip · mô tả) đứng Ở ĐÂU.
+ *
+ * Chủ dự án chốt: trong popup nó rời khỏi dải ngang trên cùng — dải ấy trả hết cho khung
+ * xem đề — và xuống nằm đầu cột phải, ngay trên "Tệp đính kèm". Trang đầy đủ
+ * `/challenges/[challengeId]` thì GIỮ NGUYÊN: ở đó tiêu đề trên cùng là đúng.
+ *
+ * Ba nhánh phải ghim cùng lúc vì điều kiện là `inModal && hasPaper`, và bỏ sót vế nào
+ * cũng ra một bề mặt sai lặng lẽ: popup của một đề KHÔNG kèm đề thi thì chẳng có cột
+ * phải nào để tụt xuống, còn trang thì không được đổi gì cả.
+ */
+describe("ChallengeHeading — tiêu đề nằm trên cùng hay trong cột phải", () => {
+    /** Challenge KÈM đề thi (paperUrl) → đi vào nhánh ChallengePaper. */
+    const paperChallenge = () =>
+        ({
+            ...challenge("coding"),
+            title: "SWE202c_SP26_PE1_416071",
+            paperUrl: "https://storage/de-pe.jpg",
+            paperMime: "image/png",
+        }) as unknown as ChallengeDetail
+
+    beforeEach(() => {
+        vi.clearAllMocks()
+    })
+
+    it("popup + có đề → tiêu đề được TRAO cho cột phải, bản trên cùng ẩn từ lg", () => {
+        useQueryChallengeSwr.mockReturnValue(loaded(paperChallenge()))
+
+        const { container } = render(<ChallengeView challengeId="ch-1" inModal />)
+
+        // Bản trong cột phải: nằm trong ChallengePaper.
+        expect(
+            screen.getByTestId("surface-paper").textContent,
+        ).toContain("SWE202c_SP26_PE1_416071")
+        // Bản trên cùng vẫn còn cho màn hẹp (thứ tự đọc: tiêu đề → đề → nộp bài), nhưng
+        // `lg:hidden` — nếu không có nó thì desktop đọc tiêu đề hai lần.
+        expect(container.querySelector(".lg\\:hidden")).toBeTruthy()
+    })
+
+    it("popup nhưng KHÔNG có đề → tiêu đề ở nguyên trên cùng, không ai để trao", () => {
+        useQueryChallengeSwr.mockReturnValue(loaded(challenge("coding")))
+
+        const { container } = render(<ChallengeView challengeId="ch-1" inModal />)
+
+        expect(screen.queryByTestId("surface-paper")).toBeNull()
+        expect(container.querySelector(".lg\\:hidden")).toBeNull()
+    })
+
+    it("TRANG đầy đủ + có đề → bố cục cũ y nguyên: tiêu đề trên cùng, không trao xuống", () => {
+        useQueryChallengeSwr.mockReturnValue(loaded(paperChallenge()))
+
+        const { container } = render(<ChallengeView />)
+
+        expect(screen.getByTestId("surface-paper").textContent).toBe("")
+        expect(container.querySelector(".lg\\:hidden")).toBeNull()
+        // Và link "về danh sách" vẫn còn — nó chỉ bị bỏ trong popup.
+        expect(screen.getByText("uiuxEditor.backToCatalog")).toBeTruthy()
     })
 })

@@ -299,38 +299,43 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                         definite to resolve against. */}
                     <Modal.Container
                         size={isExamExpanded ? "full" : undefined}
-                        className={isExamExpanded ? "sm:w-full" : "p-3 sm:p-6"}
+                        className={isExamExpanded ? "sm:w-full" : "p-3 sm:p-2"}
                     >
                         {/*
-                         * Khuôn lấy NGUYÊN theo `CommunityPhotoLightboxModal`
-                         * (`h-[90vh] max-h-[90vh] w-[95vw] max-w-6xl overflow-hidden`). Bề ngang
-                         * vốn đã bằng nhau rồi; thứ còn thiếu là CHIỀU CAO CỐ ĐỊNH. Để dialog co
-                         * theo nội dung là bài toán con gà quả trứng: popup chỉ cao bằng khung ảnh,
-                         * mà khung ảnh thì đang đợi popup cho chỗ — nên ảnh đề mãi kẹt ở cái sàn
-                         * `60dvh`. Ghim `h-[90vh]` là `SubjectFeAlbum` có cái để `flex-1` vào, và
-                         * ảnh (`object-contain`) lớn theo khung.
+                         * CHIỀU CAO CỐ ĐỊNH là thứ khung ảnh cần: để dialog co theo nội dung là
+                         * bài toán con gà quả trứng — popup chỉ cao bằng khung ảnh, mà khung ảnh
+                         * thì đang đợi popup cho chỗ, nên ảnh đề mãi kẹt ở cái sàn `60dvh`. Ghim
+                         * `h-[92vh]` là `SubjectFeAlbum` có cái để `flex-1` vào, và ảnh
+                         * (`object-contain`) lớn theo khung. Dialog KHÔNG cuộn: phần cuộn nằm
+                         * trong album (thêm một tầng nữa là hai thanh cuộn lồng nhau).
                          *
-                         * ponytail: vùng cuộn vẫn chia y như cũ — nhánh FE để dialog KHÔNG cuộn,
-                         * phần cuộn nằm trong album (thêm một tầng nữa là hai thanh cuộn lồng nhau);
-                         * `ChallengeView` (PE) không tạo vùng cuộn con nào (nó xếp dọc hết) nên
-                         * nhánh PE giữ nguyên `max-h` + cuộn ở chính dialog.
+                         * BỀ NGANG: bỏ trần `max-w-6xl` (72rem) — chính nó bó popup lại còn khúc
+                         * giữa màn hình và bỏ trắng hai bên, trong khi thứ nằm trong đó là trang
+                         * đề A4 cần phóng to hết cỡ. `sm:w-[96vw]` + máng container `sm:p-2` =
+                         * gần trọn bề ngang, chừa máng mỏng. Dưới `sm` không đặt bề ngang:
+                         * `.modal__dialog` đã `w-full` và container cũng `w-full` ở cỡ đó.
+                         * Cùng con số với popup đề PE của `SubjectWorkspaceRail` — hai bề mặt
+                         * của cùng một sản phẩm thì không được lệch khuôn nhau.
                          *
-                         * EXPANDED thì cái hộp đó chính là thứ phải biến mất: `95vw/6xl/90vh`
-                         * mà giữ nguyên thì bấm "toàn màn hình" xong vẫn là cái popup cũ — nút
+                         * EXPANDED thì cái hộp đó chính là thứ phải biến mất: giữ nguyên
+                         * `96vw/92vh` thì bấm "toàn màn hình" xong vẫn là cái popup cũ — nút
                          * trông như hỏng. Ghi thẳng bằng utility (không nhờ `.modal__dialog--full`)
                          * để không có utility nào phải tranh với utility ngược lại: chuỗi class
                          * được HOÁN nguyên cụm, đúng lối `useExamExpand` làm với khung 2 cột.
+                         *
+                         * ★ `max-w-none` KHÔNG PHẢI THỪA. `Modal.Container` không truyền `size`
+                         * ⇒ HeroUI lấy `defaultVariants.size = "md"` ⇒ dialog luôn mang class
+                         * `modal__dialog--md`, mà `modal.css` bake `.modal__dialog--md { max-width:
+                         * 28rem }` trong `@layer components`. Bỏ `max-w-6xl` mà không thay bằng
+                         * gì thì không còn utility nào tranh với 28rem: popup HẸP LẠI còn 448px
+                         * (nhỏ hơn cả bản cũ), `sm:w-[96vw]` set `width` xong bị `max-width` cắt.
+                         * Trần mặc định phải được GỠ TƯỜNG MINH.
                          */}
                         <Modal.Dialog
                             className={
                                 isExamExpanded
                                     ? "h-full max-h-full w-full overflow-hidden rounded-none"
-                                    : cn(
-                                        "w-[95vw] max-w-6xl",
-                                        kind === "pe"
-                                            ? "max-h-[90vh] overflow-y-auto"
-                                            : "h-[90vh] max-h-[90vh] overflow-hidden",
-                                    )
+                                    : "h-[92vh] max-h-[92vh] max-w-none overflow-hidden sm:w-[96vw]"
                             }
                         >
                             <Modal.CloseTrigger

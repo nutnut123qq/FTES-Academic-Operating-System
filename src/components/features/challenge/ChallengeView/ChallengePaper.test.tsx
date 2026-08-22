@@ -140,6 +140,7 @@ const setup = (
         author?: ChallengeAuthorView | null
         createdAt?: string | null
         inModal?: boolean
+        heading?: React.ReactNode
     },
 ) =>
     render(
@@ -151,6 +152,7 @@ const setup = (
             author={extra?.author}
             createdAt={extra?.createdAt}
             inModal={extra?.inModal}
+            heading={extra?.heading}
         />,
     )
 
@@ -240,12 +242,18 @@ describe("ChallengePaper — the gated hand-in column", () => {
 })
 
 /**
- * Inside a DIALOG the surface must stop measuring itself against the VIEWPORT, while keeping
- * the same responsive two-pane layout as FE. The dialog owns vertical scrolling; desktop
- * placement remains paper-left, discussion-right.
+ * Inside a DIALOG the surface keeps the same responsive two-pane layout as FE; the ONE
+ * thing that differs is where the frame's height comes from.
+ *
+ * Cái này từng làm ngược: `inModal` gỡ sạch mọi ràng buộc chiều cao và để cả dialog cuộn
+ * như một khối, nên khung xem đề mắc kẹt ở sàn `60dvh` — người ta mở popup lên để NHÌN
+ * ĐỀ mà đề lại là thứ nhỏ nhất trong popup. Giờ dialog tự ghim `h-[92vh]`, khung đề
+ * `lg:flex-1` vào phần còn lại, và cột phải cuộn trong chính nó y như trên trang. Ba mắt
+ * xích (`section` → khung → pane) đều được ghim ở đây vì thiếu MỘT mắt là `flex-1` rơi
+ * vào chiều cao auto và khung lại bẹp về `60dvh` — hỏng im lặng, nhìn ảnh chụp mới thấy.
  */
 describe("ChallengePaper — inside a dialog", () => {
-    it("keeps FE-style desktop columns but drops viewport-pinned sizing", () => {
+    it("takes its height from the DIALOG (flex-1), not from the viewport", () => {
         const { container } = setup("https://storage/de-pe.jpg", "image/png", {
             challengeId: "c-1",
             author: AUTHOR,
@@ -253,19 +261,63 @@ describe("ChallengePaper — inside a dialog", () => {
         })
         const markup = container.innerHTML
         expect(markup).not.toContain("lg:h-[calc(100dvh-12rem)]")
-        expect(markup).not.toContain("lg:max-h-[45%]")
-        expect(markup).toContain("lg:grid-cols-[minmax(0,1fr)_400px]")
+        // Mắt xích giữa: section phải nhường chiều cao xuống, nếu không khung `flex-1`
+        // vào một cột auto và không cao thêm được chút nào.
+        const section = container.querySelector("section")
+        expect(section?.className).toContain("lg:flex-1")
+        expect(markup).toContain("lg:flex-1")
+        // ★ …nhưng CHỈ từ `lg`. `min-h-0` trần bỏ sàn co ở mọi cỡ màn, và dưới `lg` cột
+        // `overflow-y-auto` của ChallengeView sẽ bóp section này lại rồi `overflow-hidden`
+        // của khung cắt mất khối nộp bài + thảo luận — không có thanh cuộn nào để tới.
+        expect(section?.className).toContain("lg:min-h-0")
+        expect(section?.className.split(/\s+/)).not.toContain("min-h-0")
+        // …và cột phải co giãn theo bề ngang popup (sàn 25rem) thay vì một sợi 400px cố
+        // định để pane trái letterbox gần 1000px nền trống ở 1920.
+        expect(markup).toContain("lg:grid-cols-[minmax(0,1fr)_minmax(25rem,32%)]")
+        expect(markup).not.toContain("2xl:grid-cols-[minmax(0,1fr)_30rem]")
     })
 
-    it("keeps the hand-in panel WHOLE — it is the reason the dialog scrolls", () => {
-        setup("https://storage/de-pe.jpg", "image/png", {
+    it("cột phải cuộn TRONG chính nó — đó là thứ giữ khung đề cao", () => {
+        const { container } = setup("https://storage/de-pe.jpg", "image/png", {
             challengeId: "c-1",
             author: AUTHOR,
             inModal: true,
         })
+        // Không cap thì khối nộp bài + thảo luận cao tự nhiên và đẩy khung đề bẹp lại.
+        expect(container.innerHTML).toContain("lg:max-h-[45%]")
         expect(screen.getByText("paper.submit.title")).toBeTruthy()
         expect(screen.getByText("paper.submit.dropzone")).toBeTruthy()
         expect(screen.getByTestId("challenge-comments")).toBeTruthy()
+    })
+
+    it("đặt cụm tiêu đề chủ gọi trao vào ĐẦU cột phải, chỉ từ lg", () => {
+        const { container } = setup("https://storage/de-pe.jpg", "image/png", {
+            challengeId: "c-1",
+            author: AUTHOR,
+            inModal: true,
+            heading: <span data-testid="paper-heading">SWE202c_SP26_PE1</span>,
+        })
+        const heading = screen.getByTestId("paper-heading")
+        expect(heading).toBeTruthy()
+        // `hidden lg:flex`: dưới `lg` hai pane xếp dọc và bản trên cùng của ChallengeView
+        // mới là bản đúng thứ tự đọc — đúng một bản hiện tại mỗi lúc.
+        expect(heading.parentElement?.className).toContain("hidden")
+        expect(heading.parentElement?.className).toContain("lg:flex")
+        // Đứng TRƯỚC "Tệp đính kèm"/khối nộp bài trong cột phải.
+        expect(container.innerHTML.indexOf("paper-heading")).toBeLessThan(
+            container.innerHTML.indexOf("paper.submit.title"),
+        )
+        // ★ …nhưng NGOÀI dải bị cap `lg:max-h-[45%]`. Nằm trong đó thì trên laptop 768px
+        // (dải ≈ 264px) riêng cụm tiêu đề đã ăn ~150px và nút "Nộp bài" bị đẩy khuất.
+        expect(heading.closest("[class*='lg:max-h-[45%]']")).toBeNull()
+    })
+
+    it("không có cụm tiêu đề nào được trao → cột phải y như cũ", () => {
+        setup("https://storage/de-pe.jpg", "image/png", {
+            challengeId: "c-1",
+            inModal: true,
+        })
+        expect(screen.queryByTestId("paper-heading")).toBeNull()
     })
 
     it("leaves the page layout exactly as it was when it is NOT in a dialog", () => {
@@ -276,6 +328,10 @@ describe("ChallengePaper — inside a dialog", () => {
         const markup = container.innerHTML
         expect(markup).toContain("lg:h-[calc(100dvh-12rem)]")
         expect(markup).toContain("lg:max-h-[45%]")
+        // Bố cục TRANG không đổi: cột phải vẫn 400px cố định — "chỉ đổi khi inModal".
+        expect(markup).toContain("lg:grid-cols-[minmax(0,1fr)_400px]")
+        // Trang không mượn chiều cao của ai: không `flex-1` ở đâu trong chuỗi.
+        expect(markup).not.toContain("lg:flex-1")
     })
 })
 

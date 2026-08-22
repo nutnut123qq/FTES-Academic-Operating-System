@@ -25,9 +25,21 @@ const BRIEF_SECTIONS = ["requirements", "steps", "hints"] as const
 /** BE lifecycle statuses that have an i18n label (`challengeSystem.status.*`). */
 const KNOWN_STATUSES = new Set(["PUBLISHED", "RUNNING", "CLOSED"])
 
-/** Loading skeleton mirroring the solve layout: header + brief + editor split. */
-const ChallengeViewSkeleton = () => (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+/**
+ * Loading skeleton mirroring the solve layout: header + brief + editor split.
+ *
+ * <p>`inModal` phải dùng CHUNG hộp neo với nội dung thật. Dialog cao 92vh và rộng ~96vw
+ * ngay từ khung hình đầu, nên một khung xương bị `max-w-6xl` giữ ở 1152px + `p-6` sẽ nằm
+ * lệch trên một hộp rỗng khổng lồ rồi "nở" ra khi dữ liệu về — nhấp nháy rõ mỗi lần mở.
+ * Máng 16px của `.modal__dialog` đã là khung, nên trong dialog bỏ cả trần lẫn padding.
+ */
+const ChallengeViewSkeleton = ({ inModal = false }: { inModal?: boolean }) => (
+    <div
+        className={cn(
+            "mx-auto flex w-full flex-col gap-6",
+            inModal ? "min-h-0 flex-1" : "max-w-6xl p-6",
+        )}
+    >
         {/* header: back link, then a tight title↔meta cluster (mirrors the real header) */}
         <div className="flex flex-col gap-2">
             <Skeleton className="h-4 w-32 rounded-full" />
@@ -80,6 +92,74 @@ const ChallengeBrief = ({ challenge }: { challenge: ChallengeDetail }) => {
                 </Accordion.Item>
             ))}
         </Accordion>
+    )
+}
+
+/**
+ * Khối NHẬN DẠNG của đề: mã đề · chip (loại · trạng thái · tag) · đoạn mô tả.
+ *
+ * Tách riêng vì nó phải dựng được ở HAI chỗ tuỳ bề mặt. Trên trang
+ * `/challenges/[challengeId]` nó vẫn đứng trên cùng như cũ; trong POPUP đề PE thì nó tụt
+ * xuống đầu CỘT PHẢI của {@link ChallengePaper} — cả dải ngang trên cùng của dialog trả
+ * hết cho khung xem đề, vốn là thứ người đọc mở popup lên để nhìn.
+ *
+ * Trả về FRAGMENT chứ không bọc thêm `div`: chỗ gọi tự quyết khoảng cách, nên trên trang
+ * hai mảnh (cụm tiêu đề · mô tả) rơi thẳng vào cột `gap-6` và giữ NGUYÊN khoảng cách cũ.
+ *
+ * @param props.challenge - đề đang mở.
+ * @param props.backLink - link "về danh sách"; chỉ trang mới có (popup đã có nút ×).
+ */
+const ChallengeHeading = ({
+    challenge,
+    backLink,
+}: {
+    challenge: ChallengeDetail
+    backLink?: React.ReactNode
+}) => {
+    const tSystem = useTranslations("challengeSystem")
+    return (
+        <>
+            <div className="flex flex-col gap-2">
+                {backLink}
+                <Typography type="h4" weight="bold">
+                    {challenge.title}
+                </Typography>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Chip size="sm" variant="soft" color="accent">
+                        {tSystem(`types.${challenge.type}`)}
+                    </Chip>
+                    <Chip
+                        size="sm"
+                        variant="soft"
+                        color={challenge.status === "RUNNING" ? "success" : undefined}
+                    >
+                        {KNOWN_STATUSES.has(challenge.status)
+                            ? tSystem(`status.${challenge.status}`)
+                            : challenge.status}
+                    </Chip>
+                    {/* tags (`pe`, the subject code, …) — the same chips the list
+                        filters on, so a paper's provenance is visible here too */}
+                    {challenge.tags.map((tag) => (
+                        <Chip key={tag.slug} size="sm" variant="tertiary">
+                            {tag.label}
+                        </Chip>
+                    ))}
+                </div>
+            </div>
+
+            {/* Đề bài có thể là markdown HOẶC HTML (admin soạn bằng rich-text editor) —
+                render bằng MarkdownContent kẻo thẻ `<ul><li>` lòi ra dạng text.
+                `math`: đây là ĐỀ BÀI — challenge gắn tag PE/FE mang đề toán, nên
+                `$…$` phải được typeset thay vì hiện ra dạng LaTeX thô. */}
+            {challenge.description ? (
+                <MarkdownContent
+                    allowHtml
+                    math
+                    markdown={challenge.description}
+                    className="text-muted"
+                />
+            ) : null}
+        </>
     )
 }
 
@@ -171,7 +251,6 @@ export const ChallengeView = ({
     inModal = false,
 }: ChallengeViewProps = {}) => {
     const t = useTranslations("challenge")
-    const tSystem = useTranslations("challengeSystem")
     // ponytail: the hooks stay UNCONDITIONAL (rules of hooks) and simply lose to the
     // props — in a modal they read the host page's URL, which carries neither field.
     const routeParams = useParams<{ challengeId: string }>()
@@ -195,10 +274,19 @@ export const ChallengeView = ({
         ? classifyChallengePaper(challenge.paperUrl, challenge.paperMime) !== "MISSING"
         : false
 
+    /**
+     * Cụm tiêu đề có tụt xuống cột phải của khung đề không?
+     *
+     * CHỈ trong popup và CHỈ khi thật sự có đề để xem: trên trang, dải trên cùng không
+     * cạnh tranh với ai (khung đề đã cao bằng viewport), còn một challenge không kèm đề
+     * thì chẳng có cột phải nào để tụt xuống.
+     */
+    const headingInPaperColumn = inModal && hasPaper
+
     const view = (
         <AsyncContent
             isLoading={isLoading}
-            skeleton={<ChallengeViewSkeleton />}
+            skeleton={<ChallengeViewSkeleton inModal={inModal} />}
             error={error}
             errorContent={{
                 title: t("uiuxEditor.state.errorTitle"),
@@ -206,7 +294,9 @@ export const ChallengeView = ({
                     void mutate()
                 },
                 retryLabel: t("uiuxEditor.state.retry"),
-                className: "p-6 py-16",
+                // Cùng hộp neo với nội dung thật: trong dialog thì căn giữa phần dialog còn
+                // lại thay vì neo lên đỉnh một hộp rỗng 92vh.
+                className: inModal ? "flex min-h-0 flex-1 items-center justify-center" : "p-6 py-16",
             }}
             isEmpty={!challenge}
             emptyContent={{
@@ -228,71 +318,61 @@ export const ChallengeView = ({
                         {t("uiuxEditor.backToCatalog")}
                     </Button>
                 ),
-                className: "p-6 py-16",
+                className: inModal ? "flex min-h-0 flex-1 items-center justify-center" : "p-6 py-16",
             }}
         >
             {challenge ? (
                 <div
                     className={cn(
-                        "mx-auto flex w-full flex-col gap-6 p-6",
+                        "mx-auto flex w-full flex-col gap-6",
                         // ponytail: a paper drops the measure cap instead of getting its
                         // own layout — 1152px minus the 400px discussion column left the
                         // exam pane narrower than the scan it has to show.
                         !hasPaper && "max-w-6xl",
+                        // Trong dialog, cột này LẤY phần còn lại của dialog (`flex-1`) và
+                        // giữ luôn phần cuộn — y cách `SubjectFeAlbum` nhận chiều cao từ
+                        // dialog FE. Đó là cái cho khung đề bên dưới một chiều cao THẬT để
+                        // `lg:flex-1` vào, thay vì mãi kẹt ở sàn `60dvh`. Không padding
+                        // riêng: máng của `.modal__dialog` (16px, ghim ở globals.css) đã là
+                        // cái khung rồi, thêm một lớp nữa chỉ bóp khung đề lại.
+                        inModal ? "min-h-0 flex-1 overflow-y-auto" : "p-6",
                     )}
                 >
                     {/* header: back link, then a tight title↔meta cluster.
                         In a modal the back link is dropped — the dialog's × (and Esc, and
                         the backdrop) is the way out, and a link that NAVIGATES would take
-                        the reader off the page they popped this open from. */}
-                    <div className="flex flex-col gap-2">
-                        {inModal ? null : (
-                            <Link
-                                href={backHref}
-                                className="flex w-fit items-center gap-2 text-sm text-muted no-underline transition-colors hover:text-foreground"
-                            >
-                                <ArrowLeftIcon className="size-4" aria-hidden focusable="false" />
-                                {t("uiuxEditor.backToCatalog")}
-                            </Link>
-                        )}
-                        <Typography type="h4" weight="bold">
-                            {challenge.title}
-                        </Typography>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Chip size="sm" variant="soft" color="accent">
-                                {tSystem(`types.${challenge.type}`)}
-                            </Chip>
-                            <Chip
-                                size="sm"
-                                variant="soft"
-                                color={challenge.status === "RUNNING" ? "success" : undefined}
-                            >
-                                {KNOWN_STATUSES.has(challenge.status)
-                                    ? tSystem(`status.${challenge.status}`)
-                                    : challenge.status}
-                            </Chip>
-                            {/* tags (`pe`, the subject code, …) — the same chips the list
-                                filters on, so a paper's provenance is visible here too */}
-                            {challenge.tags.map((tag) => (
-                                <Chip key={tag.slug} size="sm" variant="tertiary">
-                                    {tag.label}
-                                </Chip>
-                            ))}
-                        </div>
-                    </div>
+                        the reader off the page they popped this open from.
 
-                    {/* Đề bài có thể là markdown HOẶC HTML (admin soạn bằng rich-text editor) —
-                        render bằng MarkdownContent kẻo thẻ `<ul><li>` lòi ra dạng text.
-                        `math`: đây là ĐỀ BÀI — challenge gắn tag PE/FE mang đề toán, nên
-                        `$…$` phải được typeset thay vì hiện ra dạng LaTeX thô. */}
-                    {challenge.description ? (
-                        <MarkdownContent
-                            allowHtml
-                            math
-                            markdown={challenge.description}
-                            className="text-muted"
+                        Popup + có đề (`headingInPaperColumn`): từ `lg` lên bản này BIẾN MẤT
+                        và cụm tiêu đề được `ChallengePaper` vẽ lại ở đầu cột phải. Bản dưới
+                        `lg` phải ở lại đúng chỗ này, vì khi hai pane xếp DỌC thì cột phải
+                        nằm sau khung đề — để tiêu đề theo nó là bắt người đọc lướt qua cả
+                        khung đề mới biết mình đang mở đề nào. `lg:hidden` là `display:none`
+                        nên bản ẩn cũng rời khỏi cây a11y: tiêu đề vẫn chỉ được đọc MỘT lần. */}
+                    {headingInPaperColumn ? (
+                        <div className="flex flex-col gap-6 lg:hidden">
+                            <ChallengeHeading challenge={challenge} />
+                        </div>
+                    ) : (
+                        <ChallengeHeading
+                            challenge={challenge}
+                            backLink={
+                                inModal ? undefined : (
+                                    <Link
+                                        href={backHref}
+                                        className="flex w-fit items-center gap-2 text-sm text-muted no-underline transition-colors hover:text-foreground"
+                                    >
+                                        <ArrowLeftIcon
+                                            className="size-4"
+                                            aria-hidden
+                                            focusable="false"
+                                        />
+                                        {t("uiuxEditor.backToCatalog")}
+                                    </Link>
+                                )
+                            }
                         />
-                    ) : null}
+                    )}
 
                     {/* Structured brief (requirements/steps/hints) — only when the BE
                         challenge actually carries any; the public view carries none today. */}
@@ -319,10 +399,16 @@ export const ChallengeView = ({
                             challengeId={challenge.challengeUuid}
                             author={challenge.author}
                             createdAt={challenge.createdAt}
-                            // In a dialog the paper stops sizing itself off the VIEWPORT —
-                            // the box scrolls instead, so the hand-in panel stays whole and
-                            // reachable rather than being trapped in a 45%-tall strip.
+                            // Trong dialog khung đề đo theo CHÍNH dialog (`lg:flex-1` vào
+                            // chiều cao 92vh mà dialog đã ghim) thay vì theo viewport.
                             inModal={inModal}
+                            // …và cụm tiêu đề đi cùng xuống đầu cột phải, để dải ngang
+                            // trên cùng thuộc về khung đề.
+                            heading={
+                                headingInPaperColumn ? (
+                                    <ChallengeHeading challenge={challenge} />
+                                ) : undefined
+                            }
                         />
                     ) : (
                         <ChallengeSolveSurface challenge={challenge} />

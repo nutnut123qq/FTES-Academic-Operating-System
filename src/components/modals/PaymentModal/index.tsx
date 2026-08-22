@@ -383,7 +383,17 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         }
     }
 
-    const close = () => setOpen(false)
+    // Closing the modal AFTER a settled payment → reload the page so the course CTA flips from
+    // "buy" to "continue learning" and the just-granted enrollment shows (the reactive revalidate
+    // via onSuccess doesn't always reach every gated surface). Only on success; a plain close/cancel
+    // never reloads.
+    const handleOpenChange = (open: boolean) => {
+        setOpen(open)
+        if (!open && phase === "success" && typeof window !== "undefined") {
+            window.location.reload()
+        }
+    }
+    const close = () => handleOpenChange(false)
 
     // The payable amount shown per the ACTIVE method (VND or Xu) — reused by the Summary
     // step's total line and the Payment step's slim recap.
@@ -394,7 +404,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
             : t("checkout.amountCoin", { amount: format.number(shown.value) })
 
     return (
-        <Modal isOpen={isOpen} onOpenChange={setOpen}>
+        <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
             <Modal.Backdrop>
                 <Modal.Container>
                     {/* `max-h-full` là CÁI CHỐT của lỗi "giỏ dài không bấm được thanh toán":

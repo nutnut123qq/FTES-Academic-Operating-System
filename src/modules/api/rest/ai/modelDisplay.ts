@@ -15,3 +15,11 @@ export const isFreeModel = (model: AiCatalogModel): boolean =>
 /** True when a model reports itself unusable (`status === "down"`). */
 export const isModelDown = (model: AiCatalogModel): boolean =>
     model.status === "down"
+
+/**
+ * True when a model is spend-gated and must be unlocked before use. Prefers the BE `locked`
+ * per-user flag, but also treats any `minSpendVnd > 0` as locked because that flag is unreliable
+ * in the current ai-service build — picking such a model otherwise 403s with AI_MODEL_LOCKED.
+ */
+export const isModelLocked = (model: AiCatalogModel): boolean =>
+    model.locked === true || (model.minSpendVnd ?? 0) > 0

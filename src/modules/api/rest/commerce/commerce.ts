@@ -37,6 +37,20 @@ export const getCart = async (): Promise<CartView> => {
 }
 
 /**
+ * Up to 5 unpaid (AWAITING_PAYMENT) orders of the current user — for the "pay invoice" popup so a
+ * buyer who reloaded away from the QR can resume it.
+ *
+ * `GET /api/v1/commerce/orders/pending`
+ */
+export const getPendingOrders = async (): Promise<OrderView[]> => {
+    return restRequest<OrderView[]>({
+        method: "GET",
+        url: "/commerce/orders/pending",
+        authenticated: true,
+    })
+}
+
+/**
  * Adds a product to the current user's cart.
  *
  * `POST /api/v1/commerce/cart/items`

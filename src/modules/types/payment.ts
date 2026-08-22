@@ -69,4 +69,12 @@ export interface PaymentContext {
      * success step then congratulates without the learn CTA.
      */
     learnHref?: string
+    /**
+     * Resume an EXISTING unpaid order instead of running checkout. Set by the "pay invoice"
+     * popup: the modal skips checkout and jumps straight to the awaiting-QR step for this order.
+     * When set, `itemIds` is ignored.
+     */
+    resumeOrderId?: string
+    /** The stored VietQR payload (EMVCo string) of the order being resumed. */
+    resumeQrCode?: string
 }
